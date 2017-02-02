@@ -1,3 +1,6 @@
 garden-game
+
 *.o
 *.so
+
+*.swp
