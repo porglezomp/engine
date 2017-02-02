@@ -6,6 +6,8 @@ ifeq ($(OS),Darwin)
 else
 endif
 
+MAIN_SRC=main.c shader.c
+
 SDL_FLAGS=$(shell sdl2-config --cflags)
 SDL_LIBS=$(shell sdl2-config --libs)
 
@@ -15,7 +17,7 @@ LDLIBS=-ldl $(SDL_LIBS) $(OPENGL_LIBS)
 all: garden-game libgame.so
 
 garden-game: main.c game.h
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(MAIN_SRC) $(LDLIBS)
 
 libgame.so: game.c game.h
 	$(CC) $(CFLAGS) -shared $(LDFLAGS) -o $@ $< $(LDLIBS) -fPIC

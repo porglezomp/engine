@@ -1,5 +1,3 @@
-#include "game.h"
-
 #include <stdio.h>
 #include <unistd.h>
 #include <iso646.h>
@@ -7,18 +5,13 @@
 #include <signal.h>
 #include <stdlib.h>
 
-#ifdef __APPLE__
-  #include <OpenGL/gl.h>
-  // macOS doesn't need glew since OpenGL functions are resolved at link-time.
-  #define glewInit()
-#else
-  #define GLEW_STATIC
-  #include <GL/glew.h>
-  #include <GL/gl.h>
-#endif
+#include "gl.h"
 
 #include <SDL.h>
 #include <SDL_opengl.h>
+
+#include "game.h"
+#include "shader.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -27,31 +20,54 @@ static const char *GAME_LIBRARY = "./libgame.so";
 static bool should_reload = true;
 static bool game_interrupted = false;
 
-struct game {
+typedef struct Game {
     void *handle;
-    struct game_api api;
-    struct game_state *state;
-};
+    Game_Api api;
+    Game_State *state;
+} Game;
 
-static struct game game;
+static Game game;
 static SDL_Window *window;
 static SDL_GLContext *context;
 
 static void handle_load_signal(int);
 static void handle_quit_signal(int);
 static void install_signals(void);
-static void game_load(struct game*);
-static void game_unload(struct game*);
+static void game_load(Game*);
+static void game_unload(Game*);
 static bool init_sdl(void);
 
 
 // Main
+
+static const char *vert_src =
+    "#version 410\n"
+    "layout (location = 0) in vec3 vert;\n"
+    "\n"
+    "void main() {\n"
+    "    gl_Position = vec4(vert, 1.0);"
+    "}";
+
+static const char *frag_src =
+    "#version 410\n"
+    "layout (location = 0) out vec4 color;\n"
+    "\n"
+    "void main() {\n"
+    "    color = vec4(1.0, 1.0, 1.0, 0.0);\n"
+    "}";
 
 int
 main()
 {
     install_signals();
     bool running = init_sdl();
+
+    Shader_Error shader_error;
+    GLuint shader = compile_shader(vert_src, frag_src, &shader_error);
+    if (shader == 0) {
+        printf("Shader error: %s\n", shader_error.message);
+        free_shader_error(&shader_error);
+    }
 
     while (running and not game_interrupted) {
         if (should_reload)
@@ -104,7 +120,7 @@ install_signals(void)
 // Game Library Reloading
 
 static void
-game_load(struct game *game)
+game_load(Game *game)
 {
     if (game->handle) {
         game->api.unload(game->state);
@@ -113,7 +129,7 @@ game_load(struct game *game)
     void *handle = dlopen(GAME_LIBRARY, RTLD_NOW);
     if (handle) {
         game->handle = handle;
-        const struct game_api *api = dlsym(game->handle, "GAME_API");
+        const Game_Api *api = dlsym(game->handle, "GAME_API");
         if (api != NULL) {
             game->api = *api;
             if (game->state == NULL) {
@@ -132,7 +148,7 @@ game_load(struct game *game)
 }
 
 static void
-game_unload(struct game *game)
+game_unload(Game *game)
 {
     if (game->handle) {
         game->api.finalize(game->state);

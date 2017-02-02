@@ -7,30 +7,30 @@
 #include <SDL_opengl.h>
 
 
-struct game_state {
+typedef struct Game_State {
     bool quit;
-};
+} Game_State;
 
 static void
-game_init(struct game_state *state)
+game_init(Game_State *state)
 {
     state->quit = false;
 }
 
 static void
-game_reload(struct game_state *state)
+game_reload(Game_State *state)
 {
      (void) state;
 }
 
 static void
-game_input(struct game_state *state)
+game_input(Game_State *state)
 {
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
-        if (event.type == SDL_QUIT) {
+        if (event.type == SDL_QUIT)
             state->quit = true;
-        }
+
         if (event.type == SDL_KEYUP) {
             switch (event.key.keysym.sym) {
             }
@@ -39,13 +39,13 @@ game_input(struct game_state *state)
 }
 
 static bool
-game_step(struct game_state *state)
+game_step(Game_State *state)
 {
     return not state->quit;
 }
 
 static void
-game_render(struct game_state *state, SDL_Window *window)
+game_render(Game_State *state, SDL_Window *window)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     (void) state;
@@ -53,21 +53,20 @@ game_render(struct game_state *state, SDL_Window *window)
 }
 
 static void
-game_unload(struct game_state *state)
+game_unload(Game_State *state)
 {
     (void) state;
 }
 
 static void
-game_finalize(struct game_state *state)
+game_finalize(Game_State *state)
 {
     (void) state;
-    printf("\n\nShutting Down!\n\n");
 }
 
 
-const struct game_api GAME_API = {
-    .game_state_size = sizeof(struct game_state),
+const Game_Api GAME_API = {
+    .game_state_size = sizeof(Game_State),
     .init = game_init,
     .finalize = game_finalize,
     .reload = game_reload,

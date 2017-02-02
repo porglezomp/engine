@@ -1,0 +1,24 @@
+#ifndef GARDEN_SHADER_HEADER_INCLUDED
+#define GARDEN_SHADER_HEADER_INCLUDED
+
+#include "gl.h"
+
+
+typedef enum Shader_Error_Type {
+    Shader_Vert_Error,
+    Shader_Frag_Error,
+    Link_Error,
+    Unknown_Error,
+} Shader_Error_Type;
+
+typedef struct Shader_Error {
+    char *message;
+    Shader_Error_Type type;
+} Shader_Error;
+
+GLuint compile_shader(const char *vert_src, const char *frag_src,
+                      Shader_Error *err);
+void free_shader_error(Shader_Error *err);
+
+
+#endif
