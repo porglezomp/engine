@@ -4,8 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <SDL.h>
-
+typedef struct SDL_Window SDL_Window;
 struct game_state;
 
 struct game_api {

@@ -8,21 +8,19 @@
 
 
 struct game_state {
-    int counter;
     bool quit;
 };
 
 static void
 game_init(struct game_state *state)
 {
-    state->counter = 0;
     state->quit = false;
 }
 
 static void
 game_reload(struct game_state *state)
 {
-    state->counter = 0;
+     (void) state;
 }
 
 static void
@@ -33,13 +31,16 @@ game_input(struct game_state *state)
         if (event.type == SDL_QUIT) {
             state->quit = true;
         }
+        if (event.type == SDL_KEYUP) {
+            switch (event.key.keysym.sym) {
+            }
+        }
     }
 }
 
 static bool
 game_step(struct game_state *state)
 {
-    state->counter++;
     return not state->quit;
 }
 
@@ -47,7 +48,7 @@ static void
 game_render(struct game_state *state, SDL_Window *window)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    printf("%d\n", state->counter);
+    (void) state;
     (void) window;
 }
 
@@ -63,6 +64,7 @@ game_finalize(struct game_state *state)
     (void) state;
     printf("\n\nShutting Down!\n\n");
 }
+
 
 const struct game_api GAME_API = {
     .game_state_size = sizeof(struct game_state),
