@@ -6,12 +6,12 @@ ifeq ($(OS),Darwin)
 else
 endif
 
-MAIN_SRC=main.c shader.c
+MAIN_SRC=main.c shader.c load_shader.c
 
 SDL_FLAGS=$(shell sdl2-config --cflags)
 SDL_LIBS=$(shell sdl2-config --libs)
 
-CFLAGS=-std=c11 -pedantic -Wall -Werror -Wextra -O3 $(SDL_FLAGS) $(OPENGL_FLAGS)
+CFLAGS=-std=c11 -pedantic -Wall -Werror -Wextra -O3 $(SDL_FLAGS) $(OPENGL_FLAGS) -g
 LDLIBS=-ldl $(SDL_LIBS) $(OPENGL_LIBS)
 
 all: garden-game libgame.so

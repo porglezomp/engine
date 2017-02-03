@@ -12,6 +12,7 @@
 
 #include "game.h"
 #include "shader.h"
+#include "load_shader.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -29,6 +30,7 @@ typedef struct Game {
 static Game game;
 static SDL_Window *window;
 static SDL_GLContext *context;
+// @Cleanup: put this in a struct
 GLuint vao;
 GLuint vbo;
 GLuint ibo;
@@ -53,46 +55,38 @@ static bool init_sdl(void);
 
 // Main
 
-static const char *vert_src =
-    "#version 410\n"
-    "layout (location = 0) in vec3 vert;\n"
-    "\n"
-    "void main() {\n"
-    "    gl_Position = vec4(vert, 1.0);"
-    "}";
-
-static const char *frag_src =
-    "#version 410\n"
-    "layout (location = 0) out vec4 color;\n"
-    "\n"
-    "void main() {\n"
-    "    color = vec4(26.0 / 255.0, 119.0 / 255.0, 166.0 / 255.0, 0.0);\n"
-    "}";
-
 int
 main()
 {
     install_signals();
     bool running = init_sdl();
 
-    Shader_Error shader_error;
-    GLuint shader = compile_shader(vert_src, frag_src, &shader_error);
-    if (shader == 0) {
-        printf("Shader error: %s\n", shader_error.message);
-        free_shader_error(&shader_error);
+    Shader_Resource shader = {
+        .vert_fname = "shader.vert",
+        .frag_fname = "shader.frag",
+        .program = 0,
+    };
+
+    Resource_Error resource_error = {0};
+    if (shader_load(&shader, &resource_error)) {
+        printf("Error loading shader: %s\n", resource_error.message);
+        free_resource_error(&resource_error);
+        return 1;
     }
 
+    // @Cleanup
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ibo);
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, 3 * 4 * sizeof(GLfloat), verts, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 3*4 * sizeof(GLfloat), verts, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * 2 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * 2 * sizeof(GLuint), indices,
+                 GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glUseProgram(shader);
+    glUseProgram(shader.program);
 
     while (running and not game_interrupted) {
         if (should_reload)

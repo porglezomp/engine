@@ -14,19 +14,20 @@ compile_shader_part(const char *src, GLenum shader_type, Shader_Error *err)
     glGetShaderiv(shader, GL_COMPILE_STATUS, &is_compiled);
     if (is_compiled == GL_FALSE) {
         if (err) {
+            free_shader_error(err);
             GLint max_length = 0;
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &max_length);
             err->message = calloc(1, max_length);
 
             switch (shader_type) {
             case GL_VERTEX_SHADER:
-                err->type = Shader_Vert_Error;
+                err->type = Shader_Error_Vert;
                 break;
             case GL_FRAGMENT_SHADER:
-                err->type = Shader_Frag_Error;
+                err->type = Shader_Error_Frag;
                 break;
             default:
-                err->type = Unknown_Error;
+                err->type = Shader_Error_Unknown;
                 break;
             }
 
@@ -64,6 +65,7 @@ compile_shader(const char *vert_src, const char *frag_src,
     glGetProgramiv(program, GL_LINK_STATUS, &is_linked);
     if (is_linked == GL_FALSE) {
         if (err) {
+            free_shader_error(err);
             GLint max_length = 0;
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &max_length);
             err->message = calloc(1, max_length);
@@ -89,6 +91,8 @@ compile_shader(const char *vert_src, const char *frag_src,
 void
 free_shader_error(Shader_Error *err)
 {
-    free(err->message);
-    err->message = NULL;
+    if (err->message) {
+        free(err->message);
+        err->message = NULL;
+    }
 }

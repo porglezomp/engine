@@ -1,4 +1,4 @@
-#ifdef __APPLE__
+#if defined(__APPLE__)
   #include <OpenGL/gl3.h>
   // macOS doesn't need glew since OpenGL functions are resolved at link-time.
   #define glewInit()

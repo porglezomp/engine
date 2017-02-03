@@ -2,5 +2,6 @@ garden-game
 
 *.o
 *.so
+*.dSYM
 
 *.swp

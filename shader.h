@@ -5,10 +5,10 @@
 
 
 typedef enum Shader_Error_Type {
-    Shader_Vert_Error,
-    Shader_Frag_Error,
-    Link_Error,
-    Unknown_Error,
+    Shader_Error_Unknown,
+    Shader_Error_Vert,
+    Shader_Error_Frag,
+    Shader_Error_Link,
 } Shader_Error_Type;
 
 typedef struct Shader_Error {

@@ -53,8 +53,7 @@ game_render(Game_State *state, SDL_Window *window)
     (void) window;
 }
 
-static void
-game_unload(Game_State *state)
+static void game_unload(Game_State *state)
 {
     (void) state;
 }
