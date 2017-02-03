@@ -47,6 +47,7 @@ game_step(Game_State *state)
 static void
 game_render(Game_State *state, SDL_Window *window)
 {
+    glClearColor(0.016, 0.039, 0.247, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     (void) state;
     (void) window;

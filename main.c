@@ -4,11 +4,11 @@
 #include <dlfcn.h>
 #include <signal.h>
 #include <stdlib.h>
-
-#include "gl.h"
+#include <assert.h>
 
 #include <SDL.h>
-#include <SDL_opengl.h>
+
+#include "gl.h"
 
 #include "game.h"
 #include "shader.h"
@@ -29,6 +29,19 @@ typedef struct Game {
 static Game game;
 static SDL_Window *window;
 static SDL_GLContext *context;
+GLuint vao;
+GLuint vbo;
+GLuint ibo;
+GLfloat verts[][3] = {
+    {0, 1, 0},
+    {1, 0, 0},
+    {-1, 0, 0},
+    {0, -1, 0},
+};
+GLuint indices[][3] = {
+    {0, 1, 2},
+    {2, 1, 3},
+};
 
 static void handle_load_signal(int);
 static void handle_quit_signal(int);
@@ -53,7 +66,7 @@ static const char *frag_src =
     "layout (location = 0) out vec4 color;\n"
     "\n"
     "void main() {\n"
-    "    color = vec4(1.0, 1.0, 1.0, 0.0);\n"
+    "    color = vec4(26.0 / 255.0, 119.0 / 255.0, 166.0 / 255.0, 0.0);\n"
     "}";
 
 int
@@ -69,6 +82,18 @@ main()
         free_shader_error(&shader_error);
     }
 
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ibo);
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, 3 * 4 * sizeof(GLfloat), verts, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * 2 * sizeof(GLuint), indices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glUseProgram(shader);
+
     while (running and not game_interrupted) {
         if (should_reload)
             game_load(&game);
@@ -77,6 +102,10 @@ main()
             game.api.input(game.state);
             running = game.api.step(game.state);
             game.api.render(game.state, window);
+
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            assert(glGetError() == GL_NO_ERROR);
+
             SDL_GL_SwapWindow(window);
         }
 
