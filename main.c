@@ -13,6 +13,7 @@
 #include "game.h"
 #include "shader.h"
 #include "load_shader.h"
+#include "hotload.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -55,6 +56,12 @@ static bool init_sdl(void);
 
 // Main
 
+void
+callback(const char *filename)
+{
+    printf("%s\n", filename);
+}
+
 int
 main()
 {
@@ -62,8 +69,8 @@ main()
     bool running = init_sdl();
 
     Shader_Resource shader = {
-        .vert_fname = "shader.vert",
-        .frag_fname = "shader.frag",
+        .vert_fname = "assets/shader.vert",
+        .frag_fname = "assets/shader.frag",
         .program = 0,
     };
 
@@ -73,6 +80,8 @@ main()
         free_resource_error(&resource_error);
         return 1;
     }
+
+    register_hotload_callback(callback);
 
     // @Cleanup
     glGenBuffers(1, &vbo);

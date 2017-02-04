@@ -6,17 +6,17 @@ ifeq ($(OS),Darwin)
 else
 endif
 
-MAIN_SRC=main.c shader.c load_shader.c
+MAIN_SRC=main.c shader.c load_shader.c hotload.c
 
 SDL_FLAGS=$(shell sdl2-config --cflags)
 SDL_LIBS=$(shell sdl2-config --libs)
 
-CFLAGS=-std=c11 -pedantic -Wall -Werror -Wextra -O3 $(SDL_FLAGS) $(OPENGL_FLAGS) -g
+CFLAGS=-std=c11 -pedantic -Wall -Werror -Wextra -O3 $(SDL_FLAGS) $(OPENGL_FLAGS) -g -framework CoreServices -pthread
 LDLIBS=-ldl $(SDL_LIBS) $(OPENGL_LIBS)
 
 all: garden-game libgame.so
 
-garden-game: main.c game.h
+garden-game: $(MAIN_SRC) game.h
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(MAIN_SRC) $(LDLIBS)
 
 libgame.so: game.c game.h
@@ -27,4 +27,4 @@ test: garden-game libgame.so
 	./$<
 
 clean:
-	$(RM) *.o *.so garden-game 
+	$(RM) *.o *.so garden-game
