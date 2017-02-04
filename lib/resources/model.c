@@ -1,7 +1,6 @@
 #include "model.h"
 
-#include "load_shader.h"
-
+#include "shader.h"
 
 void
 bind_model(Model_Resource *model)

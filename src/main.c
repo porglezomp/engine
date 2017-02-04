@@ -10,15 +10,16 @@
 
 #include <SDL.h>
 
-#include "../lib/gl.h"
+#include "lib/gl.h"
 
-#include "../game/game.h"
+#include "game/game.h"
 
-#include "shader.h"
 #include "load_shader.h"
 #include "hotload.h"
-#include "model.h"
-#include "../lib/matrix.h"
+#include "lib/matrix.h"
+
+#include "lib/resources/model.h"
+#include "lib/resources/shader.h"
 
 #define WIDTH 640
 #define HEIGHT 480

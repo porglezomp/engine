@@ -6,8 +6,8 @@
 
 #include <SDL.h>
 
-#include "../lib/gl.h"
-#include "../lib/matrix.h"
+#include "lib/gl.h"
+#include "lib/matrix.h"
 
 
 typedef struct Game_State {
