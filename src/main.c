@@ -5,15 +5,17 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stddef.h>
 
 #include <SDL.h>
 
 #include "gl.h"
 
-#include "game.h"
+#include "../lib/game.h"
 #include "shader.h"
 #include "load_shader.h"
 #include "hotload.h"
+#include "model.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -31,20 +33,6 @@ typedef struct Game {
 static Game game;
 static SDL_Window *window;
 static SDL_GLContext *context;
-// @Cleanup: put this in a struct
-GLuint vao;
-GLuint vbo;
-GLuint ibo;
-GLfloat verts[][3] = {
-    {0, 1, 0},
-    {1, 0, 0},
-    {-1, 0, 0},
-    {0, -1, 0},
-};
-GLuint indices[][3] = {
-    {0, 1, 2},
-    {2, 1, 3},
-};
 
 static void handle_load_signal(int);
 static void handle_quit_signal(int);
@@ -101,20 +89,40 @@ main()
 
     register_hotload_callback(callback);
 
-    // @Cleanup
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &ibo);
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, 3*4 * sizeof(GLfloat), verts, GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * 2 * sizeof(GLuint), indices,
-                 GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    Model_Resource model = {0, 0, 0, 0, 0};
+
+    typedef struct Vertex {
+        GLfloat x, y, z;
+        GLfloat r, g, b;
+    } Vertex;
+
+    Vertex_Format vertex = {
+        .attribs_count = 2,
+        .stride = sizeof(Vertex),
+        .sizes = {3, 3},
+        .types = {GL_FLOAT, GL_FLOAT},
+        .offsets = {offsetof(Vertex, x), offsetof(Vertex, r)},
+    };
+
+    Vertex diamond[] = {
+        {0, 1, 0, 1, 0, 0},
+        {1, 0, 0, 0, 1, 0},
+        {-1, 0, 0, 0, 0, 1},
+        {0, -1, 0, 1, 1, 1},
+    };
+
+    GLuint indices[][3] = {
+        {0, 1, 2},
+        {2, 1, 3},
+    };
+
+    model.shader = &shader;
+
+    build_model(&model, &vertex, diamond, 4 * sizeof(*diamond),
+                (GLuint*)indices, 6);
 
     while (running and not game_interrupted) {
+
         if (should_reload)
             game_load(&game);
 
@@ -122,9 +130,10 @@ main()
             game.api.input(game.state);
             running = game.api.step(game.state);
 
-            glUseProgram(shader.program);
             game.api.render(game.state, window);
 
+            model.shader = &shader;
+            bind_model(&model);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
             assert(glGetError() == GL_NO_ERROR);
 
