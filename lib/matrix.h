@@ -22,6 +22,8 @@ Mat4 mat4_rotation_x(GLfloat radians);
 Mat4 mat4_rotation_y(GLfloat radians);
 Mat4 mat4_rotation_z(GLfloat radians);
 
+Mat4 mat4_translation(GLfloat x, GLfloat y, GLfloat z);
+
 void mat4_print(const Mat4 *m);
 
 #endif

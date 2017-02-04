@@ -28,6 +28,8 @@ build_model(Model_Resource *model,
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_count * sizeof(GLuint),
                  indices, GL_STATIC_DRAW);
 
+    model->index_count = index_count;
+
     for (size_t i = 0; i < model->format->attribs_count; ++i) {
         glEnableVertexAttribArray(i);
         glVertexAttribPointer(i, model->format->sizes[i],
@@ -35,6 +37,7 @@ build_model(Model_Resource *model,
                               model->format->stride,
                               (void*)model->format->offsets[i]);
     }
+
     for (size_t i = model->format->attribs_count; i < ATTRIB_MAX_COUNT; ++i) {
         glDisableVertexAttribArray(i);
     }

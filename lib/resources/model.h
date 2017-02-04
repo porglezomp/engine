@@ -21,6 +21,7 @@ typedef struct Model_Resource {
     GLuint vao;
     GLuint vbo;
     GLuint ibo;
+    size_t index_count;
     Shader_Resource *shader;
     const Vertex_Format *format;
 } Model_Resource;

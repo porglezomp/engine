@@ -66,7 +66,7 @@ same_suffix(const char *a, const char *b)
 }
 
 void
-callback(const char *filename)
+reload_shaders(const char *filename)
 {
     if (same_suffix(filename, "assets/shader.vert") or
         same_suffix(filename, "assets/shader.frag")) {
@@ -91,22 +91,36 @@ main()
         return 1;
     }
 
-    register_hotload_callback(callback);
+    register_hotload_callback(reload_shaders);
 
-    Vertex_XYZ_RGB diamond[] = {
-        {0, 1, 0, 1, 0, 0},
-        {1, 0, 0, 0, 1, 0},
-        {-1, 0, 0, 0, 0, 1},
-        {0, -1, 0, 1, 1, 1},
+    Vertex_XYZ_RGB cube[] = {
+        {-1, -1, -1, 0, 0, 0},
+        { 1, -1, -1, 1, 0, 0},
+        {-1,  1, -1, 0, 1, 0},
+        { 1,  1, -1, 1, 1, 0},
+        {-1, -1,  1, 0, 0, 1},
+        { 1, -1,  1, 1, 0, 1},
+        {-1,  1,  1, 0, 1, 1},
+        { 1,  1,  1, 1, 1, 1},
     };
 
     GLuint indices[][3] = {
-        {0, 1, 2},
-        {2, 1, 3},
+        {0, 2, 1},
+        {2, 3, 1},
+        {4, 5, 6},
+        {6, 5, 7},
+        {0, 4, 2},
+        {2, 4, 6},
+        {1, 3, 5},
+        {3, 7, 5},
+        {1, 5, 4},
+        {1, 4, 0},
+        {3, 6, 7},
+        {3, 2, 6},
     };
 
-    Model_Resource model = {0, 0, 0, &shader, &vertex_format_xyz_rgb};
-    build_model(&model, diamond, 4 * sizeof(*diamond), (GLuint*)indices, 6);
+    Model_Resource model = {0, 0, 0, 0, &shader, &vertex_format_xyz_rgb};
+    build_model(&model, cube, 8 * sizeof(*cube), (GLuint*)indices, 3 * 2 * 6);
 
     while (running and not game_interrupted) {
 

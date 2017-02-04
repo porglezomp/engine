@@ -14,6 +14,7 @@ typedef struct Game_State {
     bool quit;
     Mat4 perspective;
     Mat4 rotation;
+    Mat4 translation;
 } Game_State;
 
 static void
@@ -28,11 +29,15 @@ game_init(Game_State *state)
         0, 0, -(f*n)/(f-n), 0,
     }};
     state->rotation = Mat4_Identity;
+    state->translation = mat4_translation(0, 0, 2);
 }
 
 static void
 game_reload(Game_State *state)
 {
+    glCullFace(GL_BACK);
+    glEnable(GL_CULL_FACE);
+    state->translation = mat4_translation(0, 0, -3);
      (void) state;
 }
 
@@ -66,9 +71,12 @@ game_render(Game_State *state, SDL_Window *window)
     Mat4 next_rotation = mat4_rotation_x(0.01);
     mat4_muli(&state->rotation, &next_rotation);
 
-    Mat4 model_view_matrix = mat4_mul(&state->perspective, &state->rotation);
+    Mat4 model_view_matrix = state->perspective;
+    mat4_muli(&model_view_matrix, &state->translation);
+    mat4_muli(&model_view_matrix, &state->rotation);
+
     glUniformMatrix4fv(0, 1, GL_TRUE, model_view_matrix.entries);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 3 * 2 * 6, GL_UNSIGNED_INT, 0);
 
     (void) window;
 }
