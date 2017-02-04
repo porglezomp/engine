@@ -1,7 +1,7 @@
 #ifndef GARDEN_LOAD_SHADER_HEADER_INCLUDED
 #define GARDEN_LOAD_SHADER_HEADER_INCLUDED
 
-#include "gl.h"
+#include "../lib/gl.h"
 
 
 typedef enum Shader_Load_Error {

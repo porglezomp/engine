@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <iso646.h>
 #include <dlfcn.h>
+
 #include <signal.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -9,13 +10,15 @@
 
 #include <SDL.h>
 
-#include "gl.h"
+#include "../lib/gl.h"
 
-#include "../lib/game.h"
+#include "../game/game.h"
+
 #include "shader.h"
 #include "load_shader.h"
 #include "hotload.h"
 #include "model.h"
+#include "../lib/matrix.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -89,14 +92,6 @@ main()
 
     register_hotload_callback(callback);
 
-    GLfloat S = 1, f = 20, n = 0.1;
-    GLfloat perspective[4][4] = {
-        {S, 0, 0, 0},
-        {0, S, 0, 0},
-        {0, 0, -f/(f-n), -1},
-        {0, 0, -(f*n)/(f-n), 0},
-    };
-
     Vertex_XYZ_RGB diamond[] = {
         {0, 1, 0, 1, 0, 0},
         {1, 0, 0, 0, 1, 0},
@@ -121,11 +116,8 @@ main()
             game.api.input(game.state);
             running = game.api.step(game.state);
 
-            game.api.render(game.state, window);
-
             bind_model(&model);
-            glUniformMatrix4fv(0, 1, GL_TRUE, (GLfloat*)perspective);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            game.api.render(game.state, window);
 
             SDL_GL_SwapWindow(window);
         }
@@ -228,6 +220,10 @@ init_sdl(void)
     if (window == NULL) {
         printf("Window could not be created: %s\n", SDL_GetError());
         return false;
+    }
+
+    if (SDL_GL_SetSwapInterval(-1)) {
+        SDL_GL_SetSwapInterval(1);
     }
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);

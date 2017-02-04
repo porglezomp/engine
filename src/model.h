@@ -1,7 +1,7 @@
 #ifndef GARDEN_MODEL_HEADER_INCLUDED
 #define GARDEN_MODEL_HEADER_INCLUDED
 
-#include "gl.h"
+#include "../lib/gl.h"
 #include <stddef.h>
 
 

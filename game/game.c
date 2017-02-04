@@ -3,18 +3,31 @@
 #include <stdio.h>
 #include <iso646.h>
 
+
 #include <SDL.h>
-#include <SDL_opengl.h>
+
+#include "../lib/gl.h"
+#include "../lib/matrix.h"
 
 
 typedef struct Game_State {
     bool quit;
+    Mat4 perspective;
+    Mat4 rotation;
 } Game_State;
 
 static void
 game_init(Game_State *state)
 {
     state->quit = false;
+    GLfloat S = 1, f = 20, n = 0.1;
+    state->perspective = (Mat4) {{
+        S, 0, 0, 0,
+        0, S, 0, 0,
+        0, 0, -f/(f-n), -1,
+        0, 0, -(f*n)/(f-n), 0,
+    }};
+    state->rotation = Mat4_Identity;
 }
 
 static void
@@ -49,7 +62,14 @@ game_render(Game_State *state, SDL_Window *window)
 {
     glClearColor(0.016, 0.039, 0.247, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    (void) state;
+
+    Mat4 next_rotation = mat4_rotation_x(0.01);
+    mat4_muli(&state->rotation, &next_rotation);
+
+    Mat4 model_view_matrix = mat4_mul(&state->perspective, &state->rotation);
+    glUniformMatrix4fv(0, 1, GL_TRUE, model_view_matrix.entries);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
     (void) window;
 }
 
