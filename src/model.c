@@ -11,7 +11,7 @@ bind_model(Model_Resource *model)
 }
 
 void
-build_model(Model_Resource *model, Vertex_Format *vertex,
+build_model(Model_Resource *model,
             void *data, size_t data_size,
             GLuint *indices, size_t index_count)
 {
@@ -29,14 +29,24 @@ build_model(Model_Resource *model, Vertex_Format *vertex,
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_count * sizeof(GLuint),
                  indices, GL_STATIC_DRAW);
 
-    for (size_t i = 0; i < vertex->attribs_count; ++i) {
+    for (size_t i = 0; i < model->format->attribs_count; ++i) {
         glEnableVertexAttribArray(i);
-        glVertexAttribPointer(i, vertex->sizes[i], vertex->types[i], GL_FALSE,
-                              vertex->stride, (void*)vertex->offsets[i]);
+        glVertexAttribPointer(i, model->format->sizes[i],
+                              model->format->types[i], GL_FALSE,
+                              model->format->stride,
+                              (void*)model->format->offsets[i]);
     }
-    for (size_t i = vertex->attribs_count; i < ATTRIB_MAX_COUNT; ++i) {
+    for (size_t i = model->format->attribs_count; i < ATTRIB_MAX_COUNT; ++i) {
         glDisableVertexAttribArray(i);
     }
 
     glUseProgram(model->shader->program);
 }
+
+Vertex_Format vertex_format_xyz_rgb = {
+    .attribs_count = 2,
+    .stride = sizeof(Vertex_XYZ_RGB),
+    .sizes = {3, 3},
+    .types = {GL_FLOAT, GL_FLOAT},
+    .offsets = {offsetof(Vertex_XYZ_RGB, x), offsetof(Vertex_XYZ_RGB, r)},
+};

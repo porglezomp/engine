@@ -89,22 +89,15 @@ main()
 
     register_hotload_callback(callback);
 
-    Model_Resource model = {0, 0, 0, 0, 0};
-
-    typedef struct Vertex {
-        GLfloat x, y, z;
-        GLfloat r, g, b;
-    } Vertex;
-
-    Vertex_Format vertex = {
-        .attribs_count = 2,
-        .stride = sizeof(Vertex),
-        .sizes = {3, 3},
-        .types = {GL_FLOAT, GL_FLOAT},
-        .offsets = {offsetof(Vertex, x), offsetof(Vertex, r)},
+    GLfloat S = 1, f = 20, n = 0.1;
+    GLfloat perspective[4][4] = {
+        {S, 0, 0, 0},
+        {0, S, 0, 0},
+        {0, 0, -f/(f-n), -1},
+        {0, 0, -(f*n)/(f-n), 0},
     };
 
-    Vertex diamond[] = {
+    Vertex_XYZ_RGB diamond[] = {
         {0, 1, 0, 1, 0, 0},
         {1, 0, 0, 0, 1, 0},
         {-1, 0, 0, 0, 0, 1},
@@ -116,10 +109,8 @@ main()
         {2, 1, 3},
     };
 
-    model.shader = &shader;
-
-    build_model(&model, &vertex, diamond, 4 * sizeof(*diamond),
-                (GLuint*)indices, 6);
+    Model_Resource model = {0, 0, 0, &shader, &vertex_format_xyz_rgb};
+    build_model(&model, diamond, 4 * sizeof(*diamond), (GLuint*)indices, 6);
 
     while (running and not game_interrupted) {
 
@@ -132,10 +123,9 @@ main()
 
             game.api.render(game.state, window);
 
-            model.shader = &shader;
             bind_model(&model);
+            glUniformMatrix4fv(0, 1, GL_TRUE, (GLfloat*)perspective);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-            assert(glGetError() == GL_NO_ERROR);
 
             SDL_GL_SwapWindow(window);
         }

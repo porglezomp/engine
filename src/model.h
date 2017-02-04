@@ -22,11 +22,18 @@ typedef struct Model_Resource {
     GLuint vbo;
     GLuint ibo;
     Shader_Resource *shader;
-    Vertex_Format *format;
+    const Vertex_Format *format;
 } Model_Resource;
 
+typedef struct Vertex_XYZ_RGB {
+    GLfloat x, y, z;
+    GLfloat r, g, b;
+} Vertex_XYZ_RGB;
+
+extern Vertex_Format vertex_format_xyz_rgb;
+
 void bind_model(Model_Resource *model);
-void build_model(Model_Resource *model, Vertex_Format *vertex,
+void build_model(Model_Resource *model,
                  void *data, size_t data_count,
                  GLuint *indices, size_t index_count);
 
