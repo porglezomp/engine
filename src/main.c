@@ -257,6 +257,7 @@ init_sdl(void)
     glewInit();
 
     glClearColor(66.0 / 255, 153.0 / 255, 229.0 / 255, 1.0);
+    glEnable(GL_CULL_FACE);
 
     return true;
 }

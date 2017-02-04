@@ -35,11 +35,11 @@ game_init(Game_State *state)
 static void
 game_reload(Game_State *state)
 {
-    glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
     state->translation = mat4_translation(0, 0, -3);
      (void) state;
 }
+
+static int counter = 0;
 
 static void
 game_input(Game_State *state)
@@ -51,6 +51,8 @@ game_input(Game_State *state)
 
         if (event.type == SDL_KEYUP) {
             switch (event.key.keysym.sym) {
+            case SDLK_SPACE:
+                counter++;
             }
         }
     }
@@ -68,8 +70,20 @@ game_render(Game_State *state, SDL_Window *window)
     glClearColor(0.016, 0.039, 0.247, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Mat4 next_rotation = mat4_rotation_x(0.01);
-    mat4_muli(&state->rotation, &next_rotation);
+    Mat4 next_rotation;
+    switch (counter % 3) {
+    case 0:
+        next_rotation = mat4_rotation_x(0.01);
+        break;
+    case 1:
+        next_rotation = mat4_rotation_y(0.01);
+        break;
+    case 2:
+        next_rotation = mat4_rotation_z(0.01);
+        break;
+    }
+    state->rotation = mat4_mul(&next_rotation, &state->rotation);
+    //mat4_muli(&state->rotation, &next_rotation);
 
     Mat4 model_view_matrix = state->perspective;
     mat4_muli(&model_view_matrix, &state->translation);
