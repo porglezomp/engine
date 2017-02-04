@@ -56,10 +56,34 @@ static bool init_sdl(void);
 
 // Main
 
+Shader_Resource shader = {
+    .vert_fname = "assets/shader.vert",
+    .frag_fname = "assets/shader.frag",
+    .program = 0,
+};
+
+bool
+same_suffix(const char *a, const char *b)
+{
+    size_t a_len = strlen(a), b_len = strlen(b);
+    if (a_len > b_len) {
+        return strcmp(a + (a_len - b_len), b) == 0;
+    } else {
+        return strcmp(a, b + (b_len - a_len)) == 0;
+    }
+}
+
 void
 callback(const char *filename)
 {
-    printf("%s\n", filename);
+    if (same_suffix(filename, "assets/shader.vert") or
+        same_suffix(filename, "assets/shader.frag")) {
+        Resource_Error resource_error = {0};
+        if (shader_load(&shader, &resource_error)) {
+            printf("Error loading shader: %s\n", resource_error.message);
+            free_resource_error(&resource_error);
+        }
+    }
 }
 
 int
@@ -67,12 +91,6 @@ main()
 {
     install_signals();
     bool running = init_sdl();
-
-    Shader_Resource shader = {
-        .vert_fname = "assets/shader.vert",
-        .frag_fname = "assets/shader.frag",
-        .program = 0,
-    };
 
     Resource_Error resource_error = {0};
     if (shader_load(&shader, &resource_error)) {
@@ -95,7 +113,6 @@ main()
                  GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glUseProgram(shader.program);
 
     while (running and not game_interrupted) {
         if (should_reload)
@@ -104,6 +121,8 @@ main()
         if (game.handle) {
             game.api.input(game.state);
             running = game.api.step(game.state);
+
+            glUseProgram(shader.program);
             game.api.render(game.state, window);
 
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -114,6 +133,7 @@ main()
 
         // @Todo: Better framerate handling
         SDL_Delay(1000/60);
+        run_hotload_callbacks();
     }
 
     game_unload(&game);

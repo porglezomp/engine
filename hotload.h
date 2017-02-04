@@ -4,6 +4,7 @@
 
 typedef void (*hotload_callback)(const char *file);
 void register_hotload_callback(hotload_callback callback);
+void run_hotload_callbacks(void);
 
 
 #endif
