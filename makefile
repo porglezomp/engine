@@ -28,10 +28,13 @@ garden-game: $(MAIN_SRC) $(MAIN_HEADERS) $(LIB_HEADERS) $(GAME_HEADERS) libsuppo
 
 libgame.so: $(GAME_SRC) $(GAME_HEADERS) $(LIB_HEADERS) libsupport.so
 	$(CC) $(CFLAGS) -shared $(LDFLAGS) -o $@ $(GAME_SRC) $(LDLIBS) -fPIC -L. -lsupport
-	if pgrep garden-game; then kill -s USR1 `pgrep garden-game`; fi
+	make reload
 
 libsupport.so: $(LIB_SRC) $(LIB_HEADERS)
 	$(CC) $(CFLAGS) -shared $(LDFLAGS) -o $@ $(LIB_SRC) $(LDLIBS) -fPIC
+
+reload:
+	if pgrep garden-game; then kill -s USR1 `pgrep garden-game`; fi
 
 test: garden-game libgame.so libsupport.so
 	./$<

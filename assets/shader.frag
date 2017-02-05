@@ -12,5 +12,9 @@ void main() {
     s = float(s > 0.80);
     fragColor = s * vec4(vertColor, 0.0);
 */
-    fragColor = vec4(dot(normalize(vec3(1, 1, -1)), norm));
+    vec3 normal = normalize(norm);
+    float leftLight = dot(normal, normalize(vec3(-2, 0, -1)));
+    float rightLight = dot(normal, normalize(vec3(2, 1, 0)));
+    vec3 color = vec3(1, 0.9, 0.9) * leftLight + vec3(0.9, 0.9, 1) * rightLight;
+    fragColor = vec4(color, 1.0);
 }

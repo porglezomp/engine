@@ -55,7 +55,7 @@ Shader_Resource shader = {
 };
 
 Model_Resource model = {
-    .model_fname = "assets/suzanne.model",
+    .model_fname = "assets/tree.model",
     .shader = &shader,
 };
 
@@ -86,7 +86,7 @@ reload_shaders(const char *filename)
 void
 reload_models(const char *filename)
 {
-    if (same_suffix(filename, "assets/suzanne.model")) {
+    if (same_suffix(filename, "assets/tree.model")) {
         Resource_Error resource_error = {0};
         if (model_load(&model, &resource_error)) {
             printf("Error loading model: %s\n", resource_error.message);
@@ -188,6 +188,8 @@ game_load(Game *game)
             if (game->state == NULL) {
                 game->state = calloc(1, game->api.game_state_size);
                 game->api.init(game->state);
+            } else {
+                game->state = realloc(game->state, game->api.game_state_size);
             }
             game->api.reload(game->state);
         } else {
@@ -217,10 +219,12 @@ game_unload(Game *game)
 static bool
 init_sdl(void)
 {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
         printf("SDL could not be initialized: %s\n", SDL_GetError());
         return false;
     }
+
+    SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 
     window = SDL_CreateWindow("The Garden",
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
