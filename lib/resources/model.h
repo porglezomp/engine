@@ -12,18 +12,17 @@ typedef struct Shader_Resource Shader_Resource;
 typedef struct Vertex_Format {
     size_t attribs_count;
     GLsizei stride;
+    intptr_t offsets[ATTRIB_MAX_COUNT];
     GLint sizes[ATTRIB_MAX_COUNT];
     GLenum types[ATTRIB_MAX_COUNT];
-    intptr_t offsets[ATTRIB_MAX_COUNT];
 } Vertex_Format;
 
 typedef struct Model_Resource {
-    GLuint vao;
-    GLuint vbo;
-    GLuint ibo;
+    char *model_fname;
     size_t index_count;
     Shader_Resource *shader;
-    const Vertex_Format *format;
+    Vertex_Format format;
+    GLuint vao, vbo, ibo;
 } Model_Resource;
 
 typedef struct Vertex_XYZ_RGB {

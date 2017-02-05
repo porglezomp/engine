@@ -40,6 +40,7 @@ game_reload(Game_State *state)
 }
 
 static int counter = 0;
+static int type = 0;
 
 static void
 game_input(Game_State *state)
@@ -53,6 +54,10 @@ game_input(Game_State *state)
             switch (event.key.keysym.sym) {
             case SDLK_SPACE:
                 counter++;
+                break;
+            case SDLK_TAB:
+                type++;
+                break;
             }
         }
     }
@@ -82,8 +87,12 @@ game_render(Game_State *state, SDL_Window *window)
         next_rotation = mat4_rotation_z(0.01);
         break;
     }
-    state->rotation = mat4_mul(&next_rotation, &state->rotation);
-    //mat4_muli(&state->rotation, &next_rotation);
+
+    if (type % 2) {
+        state->rotation = mat4_mul(&next_rotation, &state->rotation);
+    } else {
+        state->rotation = mat4_mul(&state->rotation, &next_rotation);
+    }
 
     Mat4 model_view_matrix = state->perspective;
     mat4_muli(&model_view_matrix, &state->translation);

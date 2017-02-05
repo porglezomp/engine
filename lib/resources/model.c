@@ -30,15 +30,15 @@ build_model(Model_Resource *model,
 
     model->index_count = index_count;
 
-    for (size_t i = 0; i < model->format->attribs_count; ++i) {
+    for (size_t i = 0; i < model->format.attribs_count; ++i) {
         glEnableVertexAttribArray(i);
-        glVertexAttribPointer(i, model->format->sizes[i],
-                              model->format->types[i], GL_FALSE,
-                              model->format->stride,
-                              (void*)model->format->offsets[i]);
+        glVertexAttribPointer(i, model->format.sizes[i],
+                              model->format.types[i], GL_FALSE,
+                              model->format.stride,
+                              (void*)model->format.offsets[i]);
     }
 
-    for (size_t i = model->format->attribs_count; i < ATTRIB_MAX_COUNT; ++i) {
+    for (size_t i = model->format.attribs_count; i < ATTRIB_MAX_COUNT; ++i) {
         glDisableVertexAttribArray(i);
     }
 

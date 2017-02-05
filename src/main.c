@@ -15,6 +15,7 @@
 #include "game/game.h"
 
 #include "load_shader.h"
+#include "load_model.h"
 #include "hotload.h"
 #include "lib/matrix.h"
 
@@ -51,7 +52,11 @@ static bool init_sdl(void);
 Shader_Resource shader = {
     .vert_fname = "assets/shader.vert",
     .frag_fname = "assets/shader.frag",
-    .program = 0,
+};
+
+Model_Resource model = {
+    .model_fname = "assets/model.raw",
+    .shader = &shader,
 };
 
 bool
@@ -78,6 +83,18 @@ reload_shaders(const char *filename)
     }
 }
 
+void
+reload_models(const char *filename)
+{
+    if (same_suffix(filename, "assets/model.raw")) {
+        Resource_Error resource_error = {0};
+        if (model_load(&model, &resource_error)) {
+            printf("Error loading model: %s\n", resource_error.message);
+            free_resource_error(&resource_error);
+        }
+    }
+}
+
 int
 main()
 {
@@ -93,37 +110,15 @@ main()
 
     register_hotload_callback(reload_shaders);
 
-    Vertex_XYZ_RGB cube[] = {
-        {-1, -1, -1, 0, 0, 0},
-        { 1, -1, -1, 1, 0, 0},
-        {-1,  1, -1, 0, 1, 0},
-        { 1,  1, -1, 1, 1, 0},
-        {-1, -1,  1, 0, 0, 1},
-        { 1, -1,  1, 1, 0, 1},
-        {-1,  1,  1, 0, 1, 1},
-        { 1,  1,  1, 1, 1, 1},
-    };
+    if (model_load(&model, &resource_error)) {
+        printf("Error loading model: %s\n", resource_error.message);
+        free_resource_error(&resource_error);
+        return 1;
+    }
 
-    GLuint indices[][3] = {
-        {0, 2, 1},
-        {2, 3, 1},
-        {4, 5, 6},
-        {6, 5, 7},
-        {0, 4, 2},
-        {2, 4, 6},
-        {1, 3, 5},
-        {3, 7, 5},
-        {1, 5, 4},
-        {1, 4, 0},
-        {3, 6, 7},
-        {3, 2, 6},
-    };
-
-    Model_Resource model = {0, 0, 0, 0, &shader, &vertex_format_xyz_rgb};
-    build_model(&model, cube, 8 * sizeof(*cube), (GLuint*)indices, 3 * 2 * 6);
+    register_hotload_callback(reload_models);
 
     while (running and not game_interrupted) {
-
         if (should_reload)
             game_load(&game);
 
@@ -258,6 +253,7 @@ init_sdl(void)
 
     glClearColor(66.0 / 255, 153.0 / 255, 229.0 / 255, 1.0);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 
     return true;
 }

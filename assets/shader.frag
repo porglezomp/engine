@@ -7,5 +7,7 @@ layout (location = 0) out vec4 fragColor;
 
 void main() {
     vec3 t = abs(vertColor - vec3(0.5)) * 2;
-    fragColor = (0.7 - (length(t * t * t) - 1)) * vec4(vertColor, 0.0);
+    float s = 1.0 - (length(t * t * t) - 1);
+    s = float(s > 0.80);
+    fragColor = s * vec4(vertColor, 0.0);
 }
