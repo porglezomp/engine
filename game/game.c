@@ -99,7 +99,7 @@ game_render(Game_State *state, SDL_Window *window)
     mat4_muli(&model_view_matrix, &state->rotation);
 
     glUniformMatrix4fv(0, 1, GL_TRUE, model_view_matrix.entries);
-    glDrawElements(GL_TRIANGLES, 3 * 2 * 6, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, 2901, GL_UNSIGNED_INT, 0);
 
     (void) window;
 }

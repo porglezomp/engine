@@ -55,7 +55,7 @@ Shader_Resource shader = {
 };
 
 Model_Resource model = {
-    .model_fname = "assets/model.raw",
+    .model_fname = "assets/suzanne.model",
     .shader = &shader,
 };
 
@@ -86,7 +86,7 @@ reload_shaders(const char *filename)
 void
 reload_models(const char *filename)
 {
-    if (same_suffix(filename, "assets/model.raw")) {
+    if (same_suffix(filename, "assets/suzanne.model")) {
         Resource_Error resource_error = {0};
         if (model_load(&model, &resource_error)) {
             printf("Error loading model: %s\n", resource_error.message);
