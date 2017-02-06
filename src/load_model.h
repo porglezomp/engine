@@ -14,6 +14,8 @@ typedef enum Model_Load_Error {
 
 
 Model_Load_Error model_load(Model_Resource *resource, Resource_Error *err);
+Model_Load_Error model_set_add(Resource_Set *set, const char *model_fname,
+                               Model_Resource **out_model, Resource_Error *err);
 
 
 #endif

@@ -1,6 +1,7 @@
 #include "load_shader.h"
 
 #include <stdlib.h>
+#include <iso646.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -161,4 +162,24 @@ free_shader_error(Shader_Error *err)
         free(err->message);
         err->message = NULL;
     }
+}
+
+Shader_Load_Error
+shader_set_add(Resource_Set *set,
+               const char *vert_fname, const char *frag_fname,
+               Shader_Resource **out_shader, Resource_Error *err)
+{
+    Shader_Resource *shader = calloc(1, sizeof(*shader));
+    shader->vert_fname = vert_fname;
+    shader->frag_fname = frag_fname;
+    shader->program = 0;
+    Resource resource = {
+        .type = Resource_Type_Shader,
+        .resource = shader,
+    };
+
+    resource_set_add(set, resource);
+    Shader_Load_Error result = shader_load(shader, err);
+    if (not result and out_shader) { *out_shader = shader; }
+    return result;
 }

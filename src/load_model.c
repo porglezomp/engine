@@ -113,3 +113,20 @@ model_load(Model_Resource *resource, Resource_Error *err)
 
     return Model_Load_Error_None;
 }
+
+Model_Load_Error
+model_set_add(Resource_Set *set, const char *model_fname,
+              Model_Resource **out_model, Resource_Error *err)
+{
+    Model_Resource *model = calloc(1, sizeof(*model));
+    model->model_fname = model_fname;
+    Resource resource = {
+        .type = Resource_Type_Model,
+        .resource = model,
+    };
+
+    resource_set_add(set, resource);
+    Model_Load_Error result = model_load(model, err);
+    if (not result and out_model) { *out_model = model; }
+    return result;
+}

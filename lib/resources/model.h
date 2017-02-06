@@ -18,7 +18,7 @@ typedef struct Vertex_Format {
 } Vertex_Format;
 
 typedef struct Model_Resource {
-    char *model_fname;
+    const char *model_fname;
     size_t index_count;
     Shader_Resource *shader;
     Vertex_Format format;

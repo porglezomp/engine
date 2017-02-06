@@ -18,7 +18,9 @@ GAME_HEADERS=$(shell find game -type f -name '*.h')
 SDL_FLAGS=$(shell sdl2-config --cflags)
 SDL_LIBS=$(shell sdl2-config --libs)
 
-CFLAGS=-std=c11 -pedantic -Wall -Werror -Wextra -O3 $(SDL_FLAGS) $(OPENGL_FLAGS) -I.
+
+OPT=-O0 -g
+CFLAGS=-std=c11 -pedantic -Wall -Werror -Wextra $(OPT) $(SDL_FLAGS) $(OPENGL_FLAGS) -I.
 LDLIBS=-ldl $(SDL_LIBS) $(OPENGL_LIBS)
 
 all: garden-game libgame.so libsupport.so

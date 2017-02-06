@@ -5,8 +5,8 @@
 
 
 typedef struct Shader_Resource {
-    char *vert_fname;
-    char *frag_fname;
+    const char *vert_fname;
+    const char *frag_fname;
     GLuint program;
 } Shader_Resource;
 

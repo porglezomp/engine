@@ -26,7 +26,7 @@
 #define HEIGHT 480
 
 static const char *GAME_LIBRARY = "./libgame.so";
-static bool should_reload = true;
+static bool should_reload = false;
 static bool game_interrupted = false;
 
 typedef struct Game {
@@ -35,7 +35,6 @@ typedef struct Game {
     Game_State *state;
 } Game;
 
-static Game game;
 static SDL_Window *window;
 static SDL_GLContext *context;
 
@@ -49,16 +48,6 @@ static bool init_sdl(void);
 
 // Main
 
-Shader_Resource shader = {
-    .vert_fname = "assets/shader.vert",
-    .frag_fname = "assets/shader.frag",
-};
-
-Model_Resource model = {
-    .model_fname = "assets/tree.model",
-    .shader = &shader,
-};
-
 bool
 same_suffix(const char *a, const char *b)
 {
@@ -70,15 +59,21 @@ same_suffix(const char *a, const char *b)
     }
 }
 
+Resource_Set shader_set;
+Resource_Set model_set;
+
 void
 reload_shaders(const char *filename)
 {
-    if (same_suffix(filename, "assets/shader.vert") or
-        same_suffix(filename, "assets/shader.frag")) {
-        Resource_Error resource_error = {0};
-        if (shader_load(&shader, &resource_error)) {
-            printf("Error loading shader: %s\n", resource_error.message);
-            free_resource_error(&resource_error);
+    for (size_t i = 0; i < shader_set.count; ++i) {
+        Shader_Resource *shader = shader_set.set[i].resource;
+        if (same_suffix(filename, shader->vert_fname) or
+            same_suffix(filename, shader->frag_fname)) {
+            Resource_Error resource_error = {0};
+            if (shader_load(shader, &resource_error)) {
+                printf("Error loading shader: %s\n", resource_error.message);
+                free_resource_error(&resource_error);
+            }
         }
     }
 }
@@ -86,11 +81,14 @@ reload_shaders(const char *filename)
 void
 reload_models(const char *filename)
 {
-    if (same_suffix(filename, "assets/tree.model")) {
-        Resource_Error resource_error = {0};
-        if (model_load(&model, &resource_error)) {
-            printf("Error loading model: %s\n", resource_error.message);
-            free_resource_error(&resource_error);
+    for (size_t i = 0; i < model_set.count; ++i) {
+        Model_Resource *model = model_set.set[i].resource;
+        if (same_suffix(filename, "assets/tree.model")) {
+            Resource_Error resource_error = {0};
+            if (model_load(model, &resource_error)) {
+                printf("Error loading model: %s\n", resource_error.message);
+                free_resource_error(&resource_error);
+            }
         }
     }
 }
@@ -98,25 +96,37 @@ reload_models(const char *filename)
 int
 main()
 {
+    static Game game;
     install_signals();
     bool running = init_sdl();
 
     Resource_Error resource_error = {0};
-    if (shader_load(&shader, &resource_error)) {
+    Shader_Resource *shader;
+    if (shader_set_add(&shader_set, "assets/shader.vert", "assets/shader.frag",
+                       &shader, &resource_error)) {
         printf("Error loading shader: %s\n", resource_error.message);
         free_resource_error(&resource_error);
+        SDL_DestroyWindow(window);
         return 1;
     }
+
+    Model_Resource *model;
+    if (model_set_add(&model_set, "assets/tree.model", &model, &resource_error)) {
+        printf("Error loading model: %s\n", resource_error.message);
+        resource_set_free(&shader_set);
+        free_resource_error(&resource_error);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+
+    model->shader = shader;
 
     register_hotload_callback(reload_shaders);
-
-    if (model_load(&model, &resource_error)) {
-        printf("Error loading model: %s\n", resource_error.message);
-        free_resource_error(&resource_error);
-        return 1;
-    }
-
     register_hotload_callback(reload_models);
+
+    game_load(&game);
+    game.api.send_set(game.state, Set_Type_Model, &model_set);
+    game.api.send_set(game.state, Set_Type_Shader, &shader_set);
 
     while (running and not game_interrupted) {
         if (should_reload)
@@ -126,10 +136,7 @@ main()
             game.api.input(game.state);
             running = game.api.step(game.state);
 
-            bind_model(&model);
             game.api.render(game.state, window);
-
-            SDL_GL_SwapWindow(window);
         }
 
         // @Todo: Better framerate handling
@@ -137,9 +144,10 @@ main()
         run_hotload_callbacks();
     }
 
+    resource_set_free(&shader_set);
+    resource_set_free(&model_set);
     game_unload(&game);
     SDL_DestroyWindow(window);
-    SDL_Quit();
     return 0;
 }
 
@@ -223,6 +231,8 @@ init_sdl(void)
         printf("SDL could not be initialized: %s\n", SDL_GetError());
         return false;
     }
+
+    atexit(SDL_Quit);
 
     SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
 

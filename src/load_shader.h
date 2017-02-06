@@ -26,10 +26,14 @@ typedef struct Shader_Error {
 
 
 Shader_Load_Error shader_load(Shader_Resource *resource, Resource_Error *err);
-
 GLuint compile_shader(const char *vert_src, const char *frag_src,
                       Shader_Error *err);
 void free_shader_error(Shader_Error *err);
+
+Shader_Load_Error shader_set_add(Resource_Set *set,
+                                 const char *vert_src, const char *frag_src,
+                                 Shader_Resource **out_shader,
+                                 Resource_Error *err);
 
 
 #endif

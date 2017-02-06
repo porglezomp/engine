@@ -9,6 +9,8 @@
 #include "lib/gl.h"
 #include "lib/matrix.h"
 #include "lib/vector.h"
+#include "lib/resources/resource.h"
+#include "lib/resources/model.h"
 
 
 const static GLfloat S = 1, f = 1000, n = 0.1;
@@ -27,6 +29,8 @@ typedef struct Game_State {
     SDL_GameController *controller;
     float left_x, left_y, right_x, right_y;
     float up_movement;
+    Resource_Set *shader_set;
+    Resource_Set *model_set;
 } Game_State;
 
 static void
@@ -124,10 +128,12 @@ game_render(Game_State *state, SDL_Window *window)
     mat4_muli(&model_view_matrix, &yaw_rotation);
     mat4_muli(&model_view_matrix, &translation);
 
+    Model_Resource *model = state->model_set->set[0].resource;
+    bind_model(model);
     glUniformMatrix4fv(0, 1, GL_TRUE, model_view_matrix.entries);
-    glDrawElements(GL_TRIANGLES, 5979, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
 
-    (void) window;
+    SDL_GL_SwapWindow(window);
 }
 
 static void game_unload(Game_State *state)
@@ -142,6 +148,19 @@ game_finalize(Game_State *state)
     (void) state;
 }
 
+static void
+game_send_set(Game_State *state, Set_Type type, Resource_Set *queue)
+{
+    switch (type) {
+    case Set_Type_Shader:
+        state->shader_set = queue;
+        break;
+    case Set_Type_Model:
+        state->model_set = queue;
+        break;
+    }
+}
+
 
 const Game_Api GAME_API = {
     .game_state_size = sizeof(Game_State),
@@ -152,4 +171,5 @@ const Game_Api GAME_API = {
     .input = game_input,
     .step = game_step,
     .render = game_render,
+    .send_set = game_send_set,
 };
