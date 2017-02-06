@@ -2,6 +2,7 @@
 #define GARDEN_MATRIX_HEADER_INCLUDED
 
 #include "gl.h"
+#include "vector.h"
 
 
 typedef struct Mat4 {
@@ -25,5 +26,7 @@ Mat4 mat4_rotation_z(GLfloat radians);
 Mat4 mat4_translation(GLfloat x, GLfloat y, GLfloat z);
 
 void mat4_print(const Mat4 *m);
+
+Vec4 mat4_lmul_vec(const Mat4 *m, const Vec4 *v);
 
 #endif

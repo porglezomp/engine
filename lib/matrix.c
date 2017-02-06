@@ -126,3 +126,25 @@ mat4_print(const Mat4 *m)
            m->entries[8], m->entries[9], m->entries[10], m->entries[11],
            m->entries[12], m->entries[13], m->entries[14], m->entries[15]);
 }
+
+
+Vec4
+mat4_lmul_vec(const Mat4 *m, const Vec4 *v)
+{
+#define EXTRACT_ROW(R) ((Vec4)                                        \
+        {m->entries[M4_IDX(R, 0)], m->entries[M4_IDX(R, 1)],          \
+         m->entries[M4_IDX(R, 2)], m->entries[M4_IDX(R, 3)]})
+
+    Vec4 result, row;
+
+    row = EXTRACT_ROW(0);
+    result.x = vec4_dot(&row, v);
+    row = EXTRACT_ROW(1);
+    result.y = vec4_dot(&row, v);
+    row = EXTRACT_ROW(2);
+    result.z = vec4_dot(&row, v);
+    row = EXTRACT_ROW(3);
+    result.w = vec4_dot(&row, v);
+
+    return result;
+}
