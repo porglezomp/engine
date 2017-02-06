@@ -6,9 +6,8 @@ void
 bind_model(Model_Resource *model)
 {
     glBindVertexArray(model->vao);
-    if (model->shader) {
+    if (model->shader)
         glUseProgram(model->shader->program);
-    }
 }
 
 void
@@ -44,9 +43,8 @@ build_model(Model_Resource *model,
         glDisableVertexAttribArray(i);
     }
 
-    if (model->shader) {
+    if (model->shader)
         glUseProgram(model->shader->program);
-    }
 }
 
 Vertex_Format vertex_format_xyz_rgb = {

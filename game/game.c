@@ -1,5 +1,6 @@
 #include "game.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <iso646.h>
 #include <stdint.h>
@@ -10,6 +11,7 @@
 #include "lib/matrix.h"
 #include "lib/vector.h"
 #include "lib/resources/resource.h"
+#include "lib/resources/shader.h"
 #include "lib/resources/model.h"
 
 
@@ -123,15 +125,24 @@ game_render(Game_State *state, SDL_Window *window)
     Mat4 pitch_rotation = mat4_rotation_x(state->pitch);
     Mat4 translation = mat4_translation(state->pos.x, state->pos.y, state->pos.z);
 
-    Mat4 model_view_matrix = perspective;
-    mat4_muli(&model_view_matrix, &pitch_rotation);
-    mat4_muli(&model_view_matrix, &yaw_rotation);
-    mat4_muli(&model_view_matrix, &translation);
+    Mat4 base_model_view = pitch_rotation;
+    mat4_muli(&base_model_view, &yaw_rotation);
+    mat4_muli(&base_model_view, &translation);
 
     Model_Resource *model = state->model_set->set[0].resource;
+    Shader_Resource *shader = model->shader;
     bind_model(model);
-    glUniformMatrix4fv(0, 1, GL_TRUE, model_view_matrix.entries);
-    glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
+    glUniformMatrix4fv(shader->uniforms[1], 1, GL_FALSE, perspective.entries);
+
+    const int grid_size = 30;
+    for (int x = -grid_size; x <= grid_size; ++x) {
+        for (int y = -grid_size; y <= grid_size; ++y) {
+            Mat4 local = mat4_translation(x * 10, 0, y * 10);
+            Mat4 model_view = mat4_mul(&base_model_view, &local);
+            glUniformMatrix4fv(shader->uniforms[0], 1, GL_FALSE, model_view.entries);
+            glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
+        }
+    }
 
     SDL_GL_SwapWindow(window);
 }

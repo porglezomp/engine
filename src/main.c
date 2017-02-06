@@ -109,6 +109,8 @@ main()
         SDL_DestroyWindow(window);
         return 1;
     }
+    const char *names[] = {"modelview", "perspective"};
+    shader_bind_uniforms(shader, 2, names);
 
     Model_Resource *model;
     if (model_set_add(&model_set, "assets/tree.model", &model, &resource_error)) {
@@ -127,6 +129,7 @@ main()
     game_load(&game);
     game.api.send_set(game.state, Set_Type_Model, &model_set);
     game.api.send_set(game.state, Set_Type_Shader, &shader_set);
+    assert(glGetError() == GL_NO_ERROR);
 
     while (running and not game_interrupted) {
         if (should_reload)
@@ -135,12 +138,11 @@ main()
         if (game.handle) {
             game.api.input(game.state);
             running = game.api.step(game.state);
-
             game.api.render(game.state, window);
         }
 
         // @Todo: Better framerate handling
-        SDL_Delay(1000/60);
+        // SDL_Delay(1000/60);
         run_hotload_callbacks();
     }
 
