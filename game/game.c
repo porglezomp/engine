@@ -23,6 +23,11 @@ const static Mat4 perspective = (Mat4) {{
     0, 0, -(f*n)/(f-n), 0,
 }};
 
+typedef struct Key {
+    bool left, right, up, down;
+    bool shift, control;
+} Key;
+
 typedef struct Game_State {
     bool quit;
     float pitch;
@@ -33,6 +38,7 @@ typedef struct Game_State {
     float up_movement;
     Resource_Set *shader_set;
     Resource_Set *model_set;
+    Key key;
 } Game_State;
 
 static void
@@ -56,19 +62,24 @@ game_reload(Game_State *state)
 static void
 game_input(Game_State *state)
 {
-    state->left_x = SDL_GameControllerGetAxis(state->controller,
-                                              SDL_CONTROLLER_AXIS_LEFTX);
-    state->left_y = -SDL_GameControllerGetAxis(state->controller,
-                                               SDL_CONTROLLER_AXIS_LEFTY);
-    state->left_x /= INT16_MAX;
-    state->left_y /= INT16_MAX;
+    if (state->controller) {
+        state->left_x = SDL_GameControllerGetAxis(state->controller,
+                                                  SDL_CONTROLLER_AXIS_LEFTX);
+        state->left_y = -SDL_GameControllerGetAxis(state->controller,
+                                                   SDL_CONTROLLER_AXIS_LEFTY);
+        state->left_x /= INT16_MAX;
+        state->left_y /= INT16_MAX;
 
-    state->right_y = -SDL_GameControllerGetAxis(state->controller,
-                                                SDL_CONTROLLER_AXIS_RIGHTY);
-    state->right_x = SDL_GameControllerGetAxis(state->controller,
-                                               SDL_CONTROLLER_AXIS_RIGHTX);
-    state->right_y /= INT16_MAX;
-    state->right_x /= INT16_MAX;
+        state->right_y = -SDL_GameControllerGetAxis(state->controller,
+                                                    SDL_CONTROLLER_AXIS_RIGHTY);
+        state->right_x = SDL_GameControllerGetAxis(state->controller,
+                                                   SDL_CONTROLLER_AXIS_RIGHTX);
+        state->right_y /= INT16_MAX;
+        state->right_x /= INT16_MAX;
+    } else {
+        state->left_x = 0;
+        state->left_y = 0;
+    }
 
     state->up_movement = 0;
 
@@ -78,6 +89,12 @@ game_input(Game_State *state)
             state->quit = true;
 
         switch (event.type) {
+        case SDL_MOUSEMOTION:
+            if (not state->controller) {
+                state->left_x = event.motion.xrel;
+                state->left_y = event.motion.yrel;
+            }
+            break;
         case SDL_CONTROLLERBUTTONUP:
             switch (event.cbutton.button) {
             case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
@@ -94,8 +111,72 @@ game_input(Game_State *state)
                 break;
             case SDLK_TAB:
                 break;
+            case SDLK_UP:
+            case SDLK_w:
+                state->key.up = false;
+                break;
+            case SDLK_DOWN:
+            case SDLK_s:
+                state->key.down = false;
+                break;
+            case SDLK_LEFT:
+            case SDLK_a:
+                state->key.left = false;
+                break;
+            case SDLK_RIGHT:
+            case SDLK_d:
+                state->key.right = false;
+                break;
+            case SDLK_LSHIFT:
+                state->key.shift = false;
+                break;
+            case SDLK_LCTRL:
+                state->key.control = false;
+                break;
             }
             break;
+        case SDL_KEYDOWN:
+            switch (event.key.keysym.sym) {
+            case SDLK_UP:
+            case SDLK_w:
+                state->key.up = true;
+                break;
+            case SDLK_DOWN:
+            case SDLK_s:
+                state->key.down = true;
+                break;
+            case SDLK_LEFT:
+            case SDLK_a:
+                state->key.left = true;
+                break;
+            case SDLK_RIGHT:
+            case SDLK_d:
+                state->key.right = true;
+                break;
+            case SDLK_LSHIFT:
+                state->key.shift = false;
+                break;
+            case SDLK_LCTRL:
+                state->key.control = false;
+                break;
+            }
+        }
+
+        if (not state->controller) {
+            state->right_x = state->right_y = 0;
+            state->up_movement = 0;
+            if (state->key.up)
+                state->right_y += 1;
+            if (state->key.down)
+                state->right_y -= 1;
+            if (state->key.right)
+                state->right_x += 1;
+            if (state->key.left)
+                state->right_x -= 1;
+            if (state->key.shift)
+                state->up_movement += 1;
+            if (state->key.control)
+                state->up_movement -= 1;
         }
     }
 }
@@ -105,8 +186,8 @@ game_step(Game_State *state)
 {
     state->yaw -= state->left_x / 30;
     state->pitch += state->left_y / 30;
-    Mat4 yaw_rotation = mat4_rotation_y(-state->yaw);
-    Mat4 rotation = mat4_rotation_x(state->pitch);
+    Mat4 yaw_rotation = mat4_rotation_y(state->yaw);
+    Mat4 rotation = mat4_rotation_x(-state->pitch);
     mat4_muli(&rotation, &yaw_rotation);
 
     Vec4 vec = {-state->right_x / 10, -state->up_movement, state->right_y / 10, 0};
@@ -121,7 +202,7 @@ game_render(Game_State *state, SDL_Window *window)
     glClearColor(0.016, 0.039, 0.247, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Mat4 yaw_rotation = mat4_rotation_y(state->yaw);
+    Mat4 yaw_rotation = mat4_rotation_y(-state->yaw);
     Mat4 pitch_rotation = mat4_rotation_x(state->pitch);
     Mat4 translation = mat4_translation(state->pos.x, state->pos.y, state->pos.z);
 
