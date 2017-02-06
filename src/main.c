@@ -25,7 +25,7 @@
 #define WIDTH 640
 #define HEIGHT 480
 
-static const char *GAME_LIBRARY = "./libgame.so";
+static const char *GAME_LIBRARY = "./target/libgame.so";
 static bool should_reload = false;
 static bool game_interrupted = false;
 
@@ -127,6 +127,9 @@ main()
     register_hotload_callback(reload_models);
 
     game_load(&game);
+    if (not game.handle)
+        return 1;
+
     game.api.send_set(game.state, Set_Type_Model, &model_set);
     game.api.send_set(game.state, Set_Type_Shader, &shader_set);
     assert(glGetError() == GL_NO_ERROR);
@@ -208,6 +211,7 @@ game_load(Game *game)
         }
     } else {
         game->handle = NULL;
+        printf("Failed to open %s\n", GAME_LIBRARY);
     }
     should_reload = false;
 }

@@ -1,45 +1,84 @@
+# Platform Specific
 OS=$(shell uname -s)
-
 ifeq ($(OS),Darwin)
-	OPENGL_FLAGS=
-	OPENGL_LIBS=-framework OpenGL
+	PLAT_LIBS=-framework OpenGL -framework CoreServices
 else
-	OPENGL_LIBS=-lgl
+	PLAT_LIBS=-lgl
 endif
 
+
+# Locate SDL2
+SDL_FLAGS=$(shell sdl2-config --cflags)
+SDL_LIBS=$(shell sdl2-config --libs)
+
+# Core config
+OPT=-O0 -g
+LDLIBS=-ldl $(SDL_LIBS) $(PLAT_LIBS)
+NODEPS=-std=c11 -pedantic -Wall -Werror -Wextra $(OPT) $(SDL_FLAGS) $(PLAT_FLAGS) -I.
+CFLAGS=$(NODEPS) -MMD
+
+# Build target folder
+ODIR=target
+OSRC=$(ODIR)/src
+OLIB=$(ODIR)/lib
+OGAME=$(ODIR)/game
+
+# Source, Object, and Deps locations
 MAIN_SRC=$(shell find src -type f -name '*.c')
 LIB_SRC=$(shell find lib -type f -name '*.c')
 GAME_SRC=$(shell find game -type f -name '*.c')
 
-MAIN_HEADERS=$(shell find src -type f -name '*.h')
-LIB_HEADERS=$(shell find lib -type f -name '*.h')
-GAME_HEADERS=$(shell find game -type f -name '*.h')
+MAIN_OBJ=$(MAIN_SRC:src/%.c=$(OSRC)/%.o)
+LIB_OBJ=$(LIB_SRC:lib/%.c=$(OLIB)/%.o)
+GAME_OBJ=$(GAME_SRC:game/%.c=$(OGAME)/%.o)
 
-SDL_FLAGS=$(shell sdl2-config --cflags)
-SDL_LIBS=$(shell sdl2-config --libs)
+MAIN_DEP=$(MAIN_SRC:src/%.c=$(OSRC)/%.d)
+LIB_DEP=$(LIB_SRC:lib/%.c=$(OLIB)/%.d)
+GAME_DEP=$(GAME_SRC:game/%.c=$(OGAME)/%.d)
+
+# Make sure all the target directories are created
+DUMMY := $(shell find lib -type d | sed 's|^|target/|' | xargs mkdir -p)
+DUMMY := $(shell find src -type d | sed 's|^|target/|' | xargs mkdir -p)
+DUMMY := $(shell find game -type d | sed 's|^|target/|' | xargs mkdir -p)
+
+# Target programs
+APP=target/garden-game
+LIBGAME=target/libgame.so
+LIBSUP=target/libsupport.so
 
 
-OPT=-O0 -g
-CFLAGS=-std=c11 -pedantic -Wall -Werror -Wextra $(OPT) $(SDL_FLAGS) $(OPENGL_FLAGS) -I.
-LDLIBS=-ldl $(SDL_LIBS) $(OPENGL_LIBS)
+all: $(APP) $(LIBGAME) $(LIBSUP)
 
-all: garden-game libgame.so libsupport.so
+$(APP): $(MAIN_OBJ) $(LIBSUP)
+	$(CC) -o $@ $(CFLAGS) $(LDFLAGS) $(MAIN_OBJ) $(LDLIBS) -Ltarget -lsupport
 
-garden-game: $(MAIN_SRC) $(MAIN_HEADERS) $(LIB_HEADERS) $(GAME_HEADERS) libsupport.so
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(MAIN_SRC) $(LDLIBS) -L. -lsupport -framework CoreServices
-
-libgame.so: $(GAME_SRC) $(GAME_HEADERS) $(LIB_HEADERS) libsupport.so
-	$(CC) $(CFLAGS) -shared $(LDFLAGS) -o $@ $(GAME_SRC) $(LDLIBS) -fPIC -L. -lsupport
+$(LIBGAME): $(GAME_OBJ) $(LIBSUP)
+	$(CC) -o $@ $(CFLAGS) -shared $(LDFLAGS) $(GAME_OBJ) $(LDLIBS) -fPIC -Ltarget -lsupport
 	make reload
 
-libsupport.so: $(LIB_SRC) $(LIB_HEADERS)
-	$(CC) $(CFLAGS) -shared $(LDFLAGS) -o $@ $(LIB_SRC) $(LDLIBS) -fPIC
+$(LIBSUP): $(LIB_OBJ)
+	$(CC) -o $@ $(CFLAGS) -shared $(LDFLAGS) $(LIB_OBJ) $(LDLIBS) -fPIC
+
+$(OSRC)/%.o: src/%.c
+	$(CC) -o $@ -c $< $(CFLAGS)
+
+$(OLIB)/%.o: lib/%.c
+	$(CC) -o $@ -c $< $(CFLAGS)
+
+$(OGAME)/%.o: game/%.c
+	$(CC) -o $@ -c $< $(CFLAGS)
 
 reload:
 	if pgrep garden-game; then kill -s USR1 `pgrep garden-game`; fi
 
-test: garden-game libgame.so libsupport.so
+test: $(APP) $(LIBGAME) $(LIBSUP)
 	./$<
 
 clean:
-	$(RM) *.o *.so garden-game
+	$(RM) -rf $(ODIR)
+
+
+# Use the generated dependency files
+-include $(MAIN_DEP)
+-include $(LIB_DEP)
+-include $(GAME_DEP)
