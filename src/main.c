@@ -2,11 +2,11 @@
 #include <unistd.h>
 #include <iso646.h>
 #include <dlfcn.h>
-
 #include <signal.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <stddef.h>
+#include <dirent.h>
 
 #include <SDL.h>
 
@@ -17,8 +17,9 @@
 #include "load_shader.h"
 #include "load_model.h"
 #include "hotload.h"
-#include "lib/matrix.h"
+#include "entity.h"
 
+#include "lib/matrix.h"
 #include "lib/resources/model.h"
 #include "lib/resources/shader.h"
 
@@ -114,6 +115,28 @@ main()
 
     Model_Resource *model;
     if (model_set_add(&model_set, "assets/tree.model", &model, &resource_error)) {
+        printf("Error loading model: %s\n", resource_error.message);
+        resource_set_free(&shader_set);
+        free_resource_error(&resource_error);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir("assets/world")) != NULL) {
+        char fname[1024];
+        while ((ent = readdir(dir)) != NULL) {
+            if (ent->d_name[0] == '.') continue;
+            snprintf(fname, 1024, "assets/world/%s", ent->d_name);
+            FILE *f = fopen(fname, "r");
+            Entity entity;
+            entity_load_file(&entity, f);
+            fclose(f);
+        }
+        closedir(dir);
+    } else {
+        printf("Error loading world\n");
         printf("Error loading model: %s\n", resource_error.message);
         resource_set_free(&shader_set);
         free_resource_error(&resource_error);
