@@ -14,7 +14,7 @@ shader_load(Shader_Resource *resource, Resource_Error *err)
             free_resource_error(err);
             size_t size = sizeof("Error opening vertex source: ");
             size += strlen(resource->vert_fname);
-            err->message = calloc(1, size);
+            err->message = (char*) calloc(1, size);
             snprintf(err->message, size, "Error opening vertex source: %s",
                      resource->vert_fname);
         }
@@ -28,7 +28,7 @@ shader_load(Shader_Resource *resource, Resource_Error *err)
             free_resource_error(err);
             size_t size = sizeof("Error opening fragment source: ");
             size += strlen(resource->frag_fname);
-            err->message = calloc(1, size);
+            err->message = (char*) calloc(1, size);
             snprintf(err->message, size, "Error opening vertex source: %s",
                      resource->frag_fname);
         }
@@ -38,20 +38,20 @@ shader_load(Shader_Resource *resource, Resource_Error *err)
     fseek(vert_file, 0, SEEK_END);
     size_t vert_len = ftell(vert_file);
     rewind(vert_file);
-    char *vert_source = calloc(1, vert_len);
+    char *vert_source = (char*) calloc(1, vert_len);
     fread(vert_source, 1, vert_len, vert_file);
     fclose(vert_file);
 
     fseek(frag_file, 0, SEEK_END);
     size_t frag_len = ftell(frag_file);
     rewind(frag_file);
-    char *frag_source = calloc(1, frag_len);
+    char *frag_source = (char*) calloc(1, frag_len);
     fread(frag_source, 1, frag_len, frag_file);
     fclose(frag_file);
 
     Shader_Error shader_error = {
-        .message = NULL,
-        .type = Shader_Error_Unknown,
+        NULL,
+        Shader_Error_Unknown,
     };
     GLuint program = compile_shader(vert_source, frag_source, &shader_error);
     free(vert_source);
@@ -84,7 +84,7 @@ compile_shader_part(const char *src, GLenum shader_type, Shader_Error *err)
             free_shader_error(err);
             GLint max_length = 0;
             glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &max_length);
-            err->message = calloc(1, max_length);
+            err->message = (char*) calloc(1, max_length);
 
             switch (shader_type) {
             case GL_VERTEX_SHADER:
@@ -135,7 +135,7 @@ compile_shader(const char *vert_src, const char *frag_src,
             free_shader_error(err);
             GLint max_length = 0;
             glGetProgramiv(program, GL_INFO_LOG_LENGTH, &max_length);
-            err->message = calloc(1, max_length);
+            err->message = (char*) calloc(1, max_length);
 
             glGetProgramInfoLog(program, max_length, NULL, err->message);
         }
@@ -169,13 +169,13 @@ shader_set_add(Resource_Set *set,
                const char *vert_fname, const char *frag_fname,
                Shader_Resource **out_shader, Resource_Error *err)
 {
-    Shader_Resource *shader = calloc(1, sizeof(*shader));
+    Shader_Resource *shader = (Shader_Resource*) calloc(1, sizeof(*shader));
     shader->vert_fname = vert_fname;
     shader->frag_fname = frag_fname;
     shader->program = 0;
     Resource resource = {
-        .type = Resource_Type_Shader,
-        .resource = shader,
+        Resource_Type_Shader,
+        shader,
     };
 
     resource_set_add(set, resource);

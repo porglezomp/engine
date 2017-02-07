@@ -14,21 +14,22 @@
 #include "lib/resources/shader.h"
 #include "lib/resources/model.h"
 
+extern "C" {
 
 const static GLfloat S = 1, f = 1000, n = 0.1;
-const static Mat4 perspective = (Mat4) {{
+const static Mat4 perspective = {{
     S, 0, 0, 0,
     0, S, 0, 0,
     0, 0, -f/(f-n), -1,
     0, 0, -(f*n)/(f-n), 0,
 }};
 
-typedef struct Key {
+struct Key {
     bool left, right, up, down;
     bool shift, control;
-} Key;
+};
 
-typedef struct Game_State {
+struct Game_State {
     bool quit;
     float pitch;
     float yaw;
@@ -39,7 +40,7 @@ typedef struct Game_State {
     Resource_Set *shader_set;
     Resource_Set *model_set;
     Key key;
-} Game_State;
+};
 
 static void
 game_init(Game_State *state)
@@ -210,7 +211,7 @@ game_render(Game_State *state, SDL_Window *window)
     mat4_muli(&base_model_view, &yaw_rotation);
     mat4_muli(&base_model_view, &translation);
 
-    Model_Resource *model = state->model_set->set[0].resource;
+    Model_Resource *model = (Model_Resource*) state->model_set->set[0].resource;
     Shader_Resource *shader = model->shader;
     bind_model(model);
     glUniformMatrix4fv(shader->uniforms[1], 1, GL_FALSE, perspective.entries);
@@ -255,13 +256,15 @@ game_send_set(Game_State *state, Set_Type type, Resource_Set *queue)
 
 
 const Game_Api GAME_API = {
-    .game_state_size = sizeof(Game_State),
-    .init = game_init,
-    .finalize = game_finalize,
-    .reload = game_reload,
-    .unload = game_unload,
-    .input = game_input,
-    .step = game_step,
-    .render = game_render,
-    .send_set = game_send_set,
+    sizeof(Game_State),
+    game_init,
+    game_finalize,
+    game_reload,
+    game_unload,
+    game_input,
+    game_step,
+    game_render,
+    game_send_set,
 };
+
+}

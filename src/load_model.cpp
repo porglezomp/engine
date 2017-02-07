@@ -10,7 +10,7 @@
 #define ERROR_INTO(LOC, MSG, NAME) {            \
         size_t len = sizeof(MSG);               \
         len += strlen(NAME);                    \
-        LOC = calloc(1, len);                   \
+        LOC = (char*) calloc(1, len);           \
         snprintf(LOC, len, MSG "%s", NAME);     \
     }
 
@@ -60,7 +60,7 @@ model_load(Model_Resource *resource, Resource_Error *err)
         return Model_Load_Error_Reading_File;
     }
 
-    GLfloat *data = calloc(data_count, sizeof(*data));
+    GLfloat *data = (GLfloat*) calloc(data_count, sizeof(*data));
     for (size_t i = 0; i < data_count; ++i) {
         float value;
         if (fscanf(file, " %f", &value) != 1) {
@@ -80,7 +80,7 @@ model_load(Model_Resource *resource, Resource_Error *err)
         return Model_Load_Error_Reading_File;
     }
 
-    GLuint *indices = calloc(index_count, sizeof(*indices));
+    GLuint *indices = (GLuint*) calloc(index_count, sizeof(*indices));
     for (size_t i = 0; i < index_count; ++i) {
         unsigned index;
         if (fscanf(file, " %u", &index) != 1) {
@@ -118,11 +118,11 @@ Model_Load_Error
 model_set_add(Resource_Set *set, const char *model_fname,
               Model_Resource **out_model, Resource_Error *err)
 {
-    Model_Resource *model = calloc(1, sizeof(*model));
+    Model_Resource *model = (Model_Resource*) calloc(1, sizeof(*model));
     model->model_fname = model_fname;
     Resource resource = {
-        .type = Resource_Type_Model,
-        .resource = model,
+        Resource_Type_Model,
+        model,
     };
 
     resource_set_add(set, resource);

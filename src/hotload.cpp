@@ -24,11 +24,11 @@ static void
 expand_queue_capacity(void)
 {
     if (event_queue == NULL) {
-        event_queue = calloc(4, sizeof(*event_queue));
+        event_queue = (char**) calloc(4, sizeof(*event_queue));
         event_capacity = 4;
     } else {
         event_capacity *= 2;
-        event_queue = realloc(event_queue, event_capacity * sizeof(*event_queue));
+        event_queue = (char**) realloc(event_queue, event_capacity * sizeof(*event_queue));
     }
 }
 
@@ -49,7 +49,7 @@ event_callback(ConstFSEventStreamRef stream_ref, void *client_callback_info,
                 expand_queue_capacity();
             }
             size_t len = strlen(((char**)event_paths)[evt]) + 1;
-            char *string = calloc(1, len);
+            char *string = (char*) calloc(1, len);
             strncpy(string, ((char**)event_paths)[evt], len - 1);
             event_queue[event_count++] = string;
         }
@@ -75,11 +75,11 @@ static void
 expand_callback_capacity(void)
 {
     if (callbacks == NULL) {
-        callbacks = calloc(1, sizeof(hotload_callback));
+        callbacks = (hotload_callback*) calloc(1, sizeof(hotload_callback));
         callback_capacity = 1;
     } else {
         callback_capacity *= 2;
-        callbacks = realloc(callbacks, callback_capacity * sizeof(hotload_callback));
+        callbacks = (hotload_callback*) realloc(callbacks, callback_capacity * sizeof(hotload_callback));
     }
 }
 

@@ -70,7 +70,7 @@ Mat4
 mat4_rotation_x(GLfloat radians)
 {
     GLfloat c = cos(radians), s = sin(radians);
-    return (Mat4) {{
+    return Mat4 {{
         1, 0, 0, 0,
         0, c, s, 0,
         0, -s, c, 0,
@@ -82,7 +82,7 @@ Mat4
 mat4_rotation_y(GLfloat radians)
 {
     GLfloat c = cos(radians), s = sin(radians);
-    return (Mat4) {{
+    return Mat4 {{
         c, 0, -s, 0,
         0, 1, 0, 0,
         s, 0, c, 0,
@@ -94,7 +94,7 @@ Mat4
 mat4_rotation_z(GLfloat radians)
 {
     GLfloat c = cos(radians), s = sin(radians);
-    return (Mat4) {{
+    return Mat4 {{
         c, s, 0, 0,
         -s, c, 0, 0,
         0, 0, 1, 0,
@@ -105,7 +105,7 @@ mat4_rotation_z(GLfloat radians)
 Mat4
 mat4_translation(GLfloat x, GLfloat y, GLfloat z)
 {
-    return (Mat4) {{
+    return Mat4 {{
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
@@ -131,7 +131,7 @@ mat4_print(const Mat4 *m)
 Vec4
 mat4_lmul_vec(const Mat4 *m, const Vec4 *v)
 {
-#define EXTRACT_ROW(R) ((Vec4)                                        \
+#define EXTRACT_ROW(R) (Vec4                                          \
         {m->entries[M4_IDX(R, 0)], m->entries[M4_IDX(R, 1)],          \
          m->entries[M4_IDX(R, 2)], m->entries[M4_IDX(R, 3)]})
 

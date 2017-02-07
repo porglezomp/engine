@@ -15,14 +15,14 @@ void
 resource_set_add(Resource_Set *set, Resource resource)
 {
     if (set->set == NULL) {
-        set->set = calloc(4, sizeof(Resource));
+        set->set = (Resource*) calloc(4, sizeof(Resource));
         set->count = 0;
         set->capacity = 4;
     }
 
     if (set->count >= set->capacity) {
         set->capacity *= 2;
-        set->set = realloc(set->set, set->capacity * sizeof(Resource));
+        set->set = (Resource*) realloc(set->set, set->capacity * sizeof(Resource));
     }
 
     set->set[set->count++] = resource;

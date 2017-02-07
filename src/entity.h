@@ -7,12 +7,12 @@
 #include <stdio.h>
 
 
-typedef struct Entity {
+struct Entity {
     char name[32];
     Vec3 pos;
     Quat orientation;
     int id;
-} Entity;
+};
 
 
 void entity_load_string(Entity *entity, const char *data);

@@ -4,13 +4,13 @@
 #include "gl.h"
 
 
-typedef struct Vec4 {
+struct Vec4 {
     GLfloat x, y, z, w;
-} Vec4;
+};
 
-typedef struct Vec3 {
+struct Vec3 {
     GLfloat x, y, z;
-} Vec3;
+};
 
 
 GLfloat vec4_dot(const Vec4 *a, const Vec4 *b);

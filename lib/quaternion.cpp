@@ -43,9 +43,9 @@ quat_mul(const Quat *a, const Quat *b)
 Vec3
 quat_rotate_vec3(const Quat *q, const Vec3 *v)
 {
-    Quat p = { .x = v->x, .y = v->y, .z = v->z, .w = 0 };
-    Quat q_inv = { .x = -q->x, .y = -q->y, .z = -q->z, .w = q->w };
+    Quat p = { v->x, v->y, v->z, 0 };
+    Quat q_inv = { -q->x, -q->y, -q->z, q->w };
     p = quat_mul(q, &p);
     quat_muli(&p, &q_inv);
-    return (Vec3) { p.x, p.y, p.z };
+    return { p.x, p.y, p.z };
 }

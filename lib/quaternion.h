@@ -4,11 +4,11 @@
 #include "gl.h"
 
 
-typedef struct Vec3 Vec3;
+struct Vec3;
 
-typedef struct Quat {
+struct Quat {
     GLfloat x, y, z, w;
-} Quat;
+};
 
 
 Quat quat_angle_axis(GLfloat angle, Vec3 *axis);

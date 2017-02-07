@@ -4,24 +4,24 @@
 #include <stddef.h>
 
 
-typedef struct Resource_Error {
+struct Resource_Error {
     char *message;
-} Resource_Error;
+};
 
-typedef enum Resource_Type {
+enum Resource_Type {
     Resource_Type_Shader,
     Resource_Type_Model
-} Resource_Type;
+};
 
-typedef struct Resource {
+struct Resource {
     Resource_Type type;
     void *resource;
-} Resource;
+};
 
-typedef struct Resource_Set {
+struct Resource_Set {
     size_t count, capacity;
     Resource *set;
-} Resource_Set;
+};
 
 
 void free_resource_error(Resource_Error *err);

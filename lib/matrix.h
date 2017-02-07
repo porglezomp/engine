@@ -5,9 +5,9 @@
 #include "vector.h"
 
 
-typedef struct Mat4 {
+struct Mat4 {
     GLfloat entries[16];
-} Mat4;
+};
 
 extern const Mat4 Mat4_Identity;
 extern const Mat4 Mat4_Zero;

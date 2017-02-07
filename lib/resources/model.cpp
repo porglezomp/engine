@@ -48,9 +48,9 @@ build_model(Model_Resource *model,
 }
 
 Vertex_Format vertex_format_xyz_rgb = {
-    .attribs_count = 2,
-    .stride = sizeof(Vertex_XYZ_RGB),
-    .sizes = {3, 3},
-    .types = {GL_FLOAT, GL_FLOAT},
-    .offsets = {offsetof(Vertex_XYZ_RGB, x), offsetof(Vertex_XYZ_RGB, r)},
+    2,
+    sizeof(Vertex_XYZ_RGB),
+    {offsetof(Vertex_XYZ_RGB, x), offsetof(Vertex_XYZ_RGB, r)},
+    {3, 3},
+    {GL_FLOAT, GL_FLOAT},
 };

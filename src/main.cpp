@@ -30,14 +30,14 @@ static const char *GAME_LIBRARY = "./target/libgame.so";
 static bool should_reload = false;
 static bool game_interrupted = false;
 
-typedef struct Game {
+struct Game {
     void *handle;
     Game_Api api;
     Game_State *state;
-} Game;
+};
 
 static SDL_Window *window;
-static SDL_GLContext *context;
+static SDL_GLContext context;
 
 static void handle_load_signal(int);
 static void handle_quit_signal(int);
@@ -67,7 +67,7 @@ void
 reload_shaders(const char *filename)
 {
     for (size_t i = 0; i < shader_set.count; ++i) {
-        Shader_Resource *shader = shader_set.set[i].resource;
+        Shader_Resource *shader = (Shader_Resource*) shader_set.set[i].resource;
         if (same_suffix(filename, shader->vert_fname) or
             same_suffix(filename, shader->frag_fname)) {
             Resource_Error resource_error = {0};
@@ -83,7 +83,7 @@ void
 reload_models(const char *filename)
 {
     for (size_t i = 0; i < model_set.count; ++i) {
-        Model_Resource *model = model_set.set[i].resource;
+        Model_Resource *model = (Model_Resource*) model_set.set[i].resource;
         if (same_suffix(filename, "assets/tree.model")) {
             Resource_Error resource_error = {0};
             if (model_load(model, &resource_error)) {
@@ -218,14 +218,14 @@ game_load(Game *game)
     void *handle = dlopen(GAME_LIBRARY, RTLD_NOW);
     if (handle) {
         game->handle = handle;
-        const Game_Api *api = dlsym(game->handle, "GAME_API");
+        const Game_Api *api = (Game_Api*) dlsym(game->handle, "GAME_API");
         if (api != NULL) {
             game->api = *api;
             if (game->state == NULL) {
-                game->state = calloc(1, game->api.game_state_size);
+                game->state = (Game_State*) calloc(1, game->api.game_state_size);
                 game->api.init(game->state);
             } else {
-                game->state = realloc(game->state, game->api.game_state_size);
+                game->state = (Game_State*) realloc(game->state, game->api.game_state_size);
             }
             game->api.reload(game->state);
         } else {
