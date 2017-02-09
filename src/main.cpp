@@ -84,7 +84,7 @@ reload_models(const char *filename)
 {
     for (size_t i = 0; i < model_set.count; ++i) {
         Model_Resource *model = (Model_Resource*) model_set.set[i].resource;
-        if (same_suffix(filename, "assets/tree.model")) {
+        if (same_suffix(filename, model->model_fname)) {
             Resource_Error resource_error = {0};
             if (model_load(model, &resource_error)) {
                 printf("Error loading model: %s\n", resource_error.message);
@@ -121,6 +121,37 @@ main()
         SDL_DestroyWindow(window);
         return 1;
     }
+    model->shader = shader;
+
+    if (model_set_add(&model_set, "assets/reeds.model", &model, &resource_error)) {
+        printf("Error loading model: %s\n", resource_error.message);
+        resource_set_free(&shader_set);
+        resource_set_free(&model_set);
+        free_resource_error(&resource_error);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+    model->shader = shader;
+
+    if (model_set_add(&model_set, "assets/well-pit.model", &model, &resource_error)) {
+        printf("Error loading model: %s\n", resource_error.message);
+        resource_set_free(&shader_set);
+        resource_set_free(&model_set);
+        free_resource_error(&resource_error);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+    model->shader = shader;
+
+    if (model_set_add(&model_set, "assets/well-ground.model", &model, &resource_error)) {
+        printf("Error loading model: %s\n", resource_error.message);
+        resource_set_free(&shader_set);
+        resource_set_free(&model_set);
+        free_resource_error(&resource_error);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+    model->shader = shader;
 
     DIR *dir;
     struct dirent *ent;
@@ -143,8 +174,6 @@ main()
         SDL_DestroyWindow(window);
         return 1;
     }
-
-    model->shader = shader;
 
     register_hotload_callback(reload_shaders);
     register_hotload_callback(reload_models);

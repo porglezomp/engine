@@ -14,8 +14,6 @@
 #include "lib/resources/shader.h"
 #include "lib/resources/model.h"
 
-extern "C" {
-
 const static GLfloat S = 1, f = 1000, n = 0.1;
 const static Mat4 perspective = {{
     S, 0, 0, 0,
@@ -211,20 +209,16 @@ game_render(Game_State *state, SDL_Window *window)
     mat4_muli(&base_model_view, &yaw_rotation);
     mat4_muli(&base_model_view, &translation);
 
-    Model_Resource *model = (Model_Resource*) state->model_set->set[0].resource;
+    Model_Resource *model = (Model_Resource*) state->model_set->set[2].resource;
     Shader_Resource *shader = model->shader;
     bind_model(model);
     glUniformMatrix4fv(shader->uniforms[1], 1, GL_FALSE, perspective.entries);
+    glUniformMatrix4fv(shader->uniforms[0], 1, GL_FALSE, base_model_view.entries);
+    glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
 
-    const int grid_size = 30;
-    for (int x = -grid_size; x <= grid_size; ++x) {
-        for (int y = -grid_size; y <= grid_size; ++y) {
-            Mat4 local = mat4_translation(x * 10, 0, y * 10);
-            Mat4 model_view = mat4_mul(&base_model_view, &local);
-            glUniformMatrix4fv(shader->uniforms[0], 1, GL_FALSE, model_view.entries);
-            glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
-        }
-    }
+    model = (Model_Resource*) state->model_set->set[3].resource;
+    bind_model(model);
+    glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
 
     SDL_GL_SwapWindow(window);
 }
@@ -254,6 +248,7 @@ game_send_set(Game_State *state, Set_Type type, Resource_Set *queue)
     }
 }
 
+extern "C" {
 
 const Game_Api GAME_API = {
     sizeof(Game_State),
