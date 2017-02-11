@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <iso646.h>
 #include <stdint.h>
+#include <math.h>
 
 #include <SDL.h>
 
@@ -31,6 +32,7 @@ struct Key {
 
 struct Game_State {
     bool quit;
+    bool paused;
     float pitch;
     float yaw;
     Vec4 pos;
@@ -42,6 +44,20 @@ struct Game_State {
     Resource_Set *texture_set;
     Key key;
 };
+
+static void
+pause(Game_State *state)
+{
+    state->paused = true;
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+}
+
+static void
+unpause(Game_State *state)
+{
+    state->paused = false;
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+}
 
 static void
 game_init(Game_State *state)
@@ -58,6 +74,9 @@ game_reload(Game_State *state)
     state->controller = SDL_GameControllerOpen(0);
     if (state->controller == NULL) {
         printf("Error opening joystick: %s\n", SDL_GetError());
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+    } else {
+        SDL_SetRelativeMouseMode(SDL_FALSE);
     }
 }
 
@@ -117,9 +136,12 @@ game_input(Game_State *state)
             break;
         case SDL_KEYUP:
             switch (event.key.keysym.sym) {
-            case SDLK_SPACE:
-                break;
-            case SDLK_TAB:
+            case SDLK_ESCAPE:
+                if (state->paused) {
+                    unpause(state);
+                } else {
+                    pause(state);
+                }
                 break;
             case SDLK_UP:
             case SDLK_w:
@@ -170,8 +192,20 @@ game_input(Game_State *state)
                 state->key.control = true;
                 break;
             }
+            break;
+        case SDL_WINDOWEVENT:
+            switch (event.window.event) {
+            case SDL_WINDOWEVENT_FOCUS_GAINED:
+                unpause(state);
+                break;
+            case SDL_WINDOWEVENT_FOCUS_LOST:
+                pause(state);
+                break;
+            }
+            break;
         }
     }
+
     if (not state->controller) {
         state->right_x = state->right_y = 0;
         state->up_movement = 0;
@@ -193,8 +227,17 @@ game_input(Game_State *state)
 static bool
 game_step(Game_State *state)
 {
+    if (state->paused) {
+        return not state->quit;
+    }
+
     state->yaw -= state->left_x / 30;
     state->pitch += state->left_y / 30;
+    if (state->pitch >= M_PI_2) {
+        state->pitch = M_PI_2;
+    } else if (state->pitch <= -M_PI_2) {
+        state->pitch = -M_PI_2;
+    }
     Mat4 rotation = mat4_rotation_y(state->yaw);
 
     float s = state->key.turbo ? 0.2 : 0.1;
@@ -207,6 +250,11 @@ game_step(Game_State *state)
 static void
 game_render(Game_State *state, SDL_Window *window)
 {
+    if (state->paused) {
+        SDL_Delay(50);
+        return;
+    }
+
     glClearColor(0.016, 0.039, 0.247, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -237,12 +285,13 @@ game_render(Game_State *state, SDL_Window *window)
     glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
 
     SDL_GL_SwapWindow(window);
-    SDL_Delay(1000/120);
 }
 
-static void game_unload(Game_State *state)
+static void
+game_unload(Game_State *state)
 {
     SDL_GameControllerClose(state->controller);
+    SDL_SetRelativeMouseMode(SDL_FALSE);
     state->controller = NULL;
 }
 
