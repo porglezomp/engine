@@ -1,9 +1,11 @@
 .DS_Store
-garden-game
+*.swp
+/cscope.out
+/cscope.files
 
 target/
 *.o
 *.so
 *.dSYM
 
-*.swp
+*.model

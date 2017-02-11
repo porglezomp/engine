@@ -16,12 +16,15 @@
 
 #include "load_shader.h"
 #include "load_model.h"
+#include "load_texture.h"
 #include "hotload.h"
 #include "entity.h"
 
 #include "lib/matrix.h"
+#include "lib/resources/resource.h"
 #include "lib/resources/model.h"
 #include "lib/resources/shader.h"
+#include "lib/resources/texture.h"
 
 #define WIDTH 640
 #define HEIGHT 480
@@ -62,6 +65,7 @@ same_suffix(const char *a, const char *b)
 
 Resource_Set shader_set;
 Resource_Set model_set;
+Resource_Set texture_set;
 
 void
 reload_shaders(const char *filename)
@@ -94,6 +98,21 @@ reload_models(const char *filename)
     }
 }
 
+void
+reload_textures(const char *filename)
+{
+    for (size_t i = 0; i < texture_set.count; ++i) {
+        Texture_Resource *texture = (Texture_Resource*) texture_set.set[i].resource;
+        if (same_suffix(filename, texture->texture_fname)) {
+            Resource_Error resource_error = {0};
+            if (texture_load(texture, &resource_error)) {
+                printf("Error loading texture: %s\n", resource_error.message);
+                free_resource_error(&resource_error);
+            }
+        }
+    }
+}
+
 int
 main()
 {
@@ -103,18 +122,18 @@ main()
 
     Resource_Error resource_error = {0};
     Shader_Resource *shader;
-    if (shader_set_add(&shader_set, "assets/shader.vert", "assets/shader.frag",
+    if (shader_set_add(&shader_set, "assets/shaders/shader.vert", "assets/shaders/shader.frag",
                        &shader, &resource_error)) {
         printf("Error loading shader: %s\n", resource_error.message);
         free_resource_error(&resource_error);
         SDL_DestroyWindow(window);
         return 1;
     }
-    const char *names[] = {"modelview", "perspective"};
-    shader_bind_uniforms(shader, 2, names);
+    const char *names[] = {"modelview", "perspective", "lightmap"};
+    shader_bind_uniforms(shader, 3, names);
 
     Model_Resource *model;
-    if (model_set_add(&model_set, "assets/tree.model", &model, &resource_error)) {
+    if (model_set_add(&model_set, "assets/models/tree.model", &model, &resource_error)) {
         printf("Error loading model: %s\n", resource_error.message);
         resource_set_free(&shader_set);
         free_resource_error(&resource_error);
@@ -123,7 +142,7 @@ main()
     }
     model->shader = shader;
 
-    if (model_set_add(&model_set, "assets/reeds.model", &model, &resource_error)) {
+    if (model_set_add(&model_set, "assets/models/reeds.model", &model, &resource_error)) {
         printf("Error loading model: %s\n", resource_error.message);
         resource_set_free(&shader_set);
         resource_set_free(&model_set);
@@ -133,7 +152,7 @@ main()
     }
     model->shader = shader;
 
-    if (model_set_add(&model_set, "assets/well-pit.model", &model, &resource_error)) {
+    if (model_set_add(&model_set, "assets/models/well-pit.model", &model, &resource_error)) {
         printf("Error loading model: %s\n", resource_error.message);
         resource_set_free(&shader_set);
         resource_set_free(&model_set);
@@ -143,7 +162,7 @@ main()
     }
     model->shader = shader;
 
-    if (model_set_add(&model_set, "assets/well-ground.model", &model, &resource_error)) {
+    if (model_set_add(&model_set, "assets/models/well-ground.model", &model, &resource_error)) {
         printf("Error loading model: %s\n", resource_error.message);
         resource_set_free(&shader_set);
         resource_set_free(&model_set);
@@ -152,6 +171,27 @@ main()
         return 1;
     }
     model->shader = shader;
+
+
+    if (texture_set_add(&texture_set, "assets/textures/lightmap1.tga", nullptr, &resource_error)) {
+        printf("Error loading texture: %s\n", resource_error.message);
+        resource_set_free(&shader_set);
+        resource_set_free(&model_set);
+        resource_set_free(&texture_set);
+        free_resource_error(&resource_error);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
+
+    if (texture_set_add(&texture_set, "assets/textures/lightmap2.tga", nullptr, &resource_error)) {
+        printf("Error loading texture: %s\n", resource_error.message);
+        resource_set_free(&shader_set);
+        resource_set_free(&model_set);
+        resource_set_free(&texture_set);
+        free_resource_error(&resource_error);
+        SDL_DestroyWindow(window);
+        return 1;
+    }
 
     DIR *dir;
     struct dirent *ent;
@@ -184,6 +224,7 @@ main()
 
     game.api.send_set(game.state, Set_Type_Model, &model_set);
     game.api.send_set(game.state, Set_Type_Shader, &shader_set);
+    game.api.send_set(game.state, Set_Type_Texture, &texture_set);
     assert(glGetError() == GL_NO_ERROR);
 
     while (running and not game_interrupted) {
@@ -304,10 +345,6 @@ init_sdl(void)
         return false;
     }
 
-    if (SDL_GL_SetSwapInterval(-1)) {
-        SDL_GL_SetSwapInterval(1);
-    }
-
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
@@ -315,6 +352,12 @@ init_sdl(void)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
     context = SDL_GL_CreateContext(window);
+
+    if (SDL_GL_SetSwapInterval(-1)) {
+        if (SDL_GL_SetSwapInterval(1)) {
+            printf("Warning! Error enabling VSync: %s\n", SDL_GetError());
+        }
+    }
 
     if (context == NULL) {
         printf("Could not create OpenGL context: %s\n", SDL_GetError());

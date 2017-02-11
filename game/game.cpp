@@ -13,6 +13,7 @@
 #include "lib/resources/resource.h"
 #include "lib/resources/shader.h"
 #include "lib/resources/model.h"
+#include "lib/resources/texture.h"
 
 const static GLfloat S = 1, f = 1000, n = 0.1;
 const static Mat4 perspective = {{
@@ -25,6 +26,7 @@ const static Mat4 perspective = {{
 struct Key {
     bool left, right, up, down;
     bool shift, control;
+    bool turbo;
 };
 
 struct Game_State {
@@ -37,6 +39,7 @@ struct Game_State {
     float up_movement;
     Resource_Set *shader_set;
     Resource_Set *model_set;
+    Resource_Set *texture_set;
     Key key;
 };
 
@@ -75,12 +78,16 @@ game_input(Game_State *state)
                                                    SDL_CONTROLLER_AXIS_RIGHTX);
         state->right_y /= INT16_MAX;
         state->right_x /= INT16_MAX;
+
+        state->up_movement -= SDL_GameControllerGetAxis(state->controller,
+                                                        SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+        state->up_movement += SDL_GameControllerGetAxis(state->controller,
+                                                        SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+        state->up_movement /= INT16_MAX;
     } else {
         state->left_x = 0;
         state->left_y = 0;
     }
-
-    state->up_movement = 0;
 
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
@@ -94,13 +101,17 @@ game_input(Game_State *state)
                 state->left_y = event.motion.yrel;
             }
             break;
+        case SDL_CONTROLLERBUTTONDOWN:
+            switch (event.cbutton.button) {
+            case SDL_CONTROLLER_BUTTON_A:
+                state->key.turbo = true;
+                break;
+            }
+            break;
         case SDL_CONTROLLERBUTTONUP:
             switch (event.cbutton.button) {
-            case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
-                state->up_movement = 1;
-                break;
-            case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
-                state->up_movement = -1;
+            case SDL_CONTROLLER_BUTTON_A:
+                state->key.turbo = false;
                 break;
             }
             break;
@@ -153,30 +164,29 @@ game_input(Game_State *state)
                 state->key.right = true;
                 break;
             case SDLK_LSHIFT:
-                state->key.shift = false;
+                state->key.shift = true;
                 break;
             case SDLK_LCTRL:
-                state->key.control = false;
+                state->key.control = true;
                 break;
             }
         }
-
-        if (not state->controller) {
-            state->right_x = state->right_y = 0;
-            state->up_movement = 0;
-            if (state->key.up)
-                state->right_y += 1;
-            if (state->key.down)
-                state->right_y -= 1;
-            if (state->key.right)
-                state->right_x += 1;
-            if (state->key.left)
-                state->right_x -= 1;
-            if (state->key.shift)
-                state->up_movement += 1;
-            if (state->key.control)
-                state->up_movement -= 1;
-        }
+    }
+    if (not state->controller) {
+        state->right_x = state->right_y = 0;
+        state->up_movement = 0;
+        if (state->key.up)
+            state->right_y += 1;
+        if (state->key.down)
+            state->right_y -= 1;
+        if (state->key.right)
+            state->right_x += 1;
+        if (state->key.left)
+            state->right_x -= 1;
+        if (state->key.shift)
+            state->up_movement += 1;
+        if (state->key.control)
+            state->up_movement -= 1;
     }
 }
 
@@ -185,11 +195,10 @@ game_step(Game_State *state)
 {
     state->yaw -= state->left_x / 30;
     state->pitch += state->left_y / 30;
-    Mat4 yaw_rotation = mat4_rotation_y(state->yaw);
-    Mat4 rotation = mat4_rotation_x(-state->pitch);
-    mat4_muli(&rotation, &yaw_rotation);
+    Mat4 rotation = mat4_rotation_y(state->yaw);
 
-    Vec4 vec = {-state->right_x / 10, -state->up_movement, state->right_y / 10, 0};
+    float s = state->key.turbo ? 0.2 : 0.1;
+    Vec4 vec = {-state->right_x * s, -state->up_movement * s, state->right_y * s, 0};
     vec = mat4_lmul_vec(&rotation, &vec);
     vec4_addi(&state->pos, &vec);
     return not state->quit;
@@ -210,17 +219,25 @@ game_render(Game_State *state, SDL_Window *window)
     mat4_muli(&base_model_view, &translation);
 
     Model_Resource *model = (Model_Resource*) state->model_set->set[2].resource;
+    Texture_Resource *texture1 = (Texture_Resource*)state->texture_set->set[0].resource;
+    Texture_Resource *texture2 = (Texture_Resource*)state->texture_set->set[1].resource;
     Shader_Resource *shader = model->shader;
+
     bind_model(model);
     glUniformMatrix4fv(shader->uniforms[1], 1, GL_FALSE, perspective.entries);
     glUniformMatrix4fv(shader->uniforms[0], 1, GL_FALSE, base_model_view.entries);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1->texture_handle);
+    glUniform1i(shader->uniforms[2], 0);
     glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
 
     model = (Model_Resource*) state->model_set->set[3].resource;
     bind_model(model);
+    glBindTexture(GL_TEXTURE_2D, texture2->texture_handle);
     glDrawElements(GL_TRIANGLES, model->index_count, GL_UNSIGNED_INT, 0);
 
     SDL_GL_SwapWindow(window);
+    SDL_Delay(1000/120);
 }
 
 static void game_unload(Game_State *state)
@@ -244,6 +261,9 @@ game_send_set(Game_State *state, Set_Type type, Resource_Set *queue)
         break;
     case Set_Type_Model:
         state->model_set = queue;
+        break;
+    case Set_Type_Texture:
+        state->texture_set = queue;
         break;
     }
 }

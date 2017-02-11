@@ -8,10 +8,10 @@
 #define UNIFORM_MAX_COUNT 8
 
 struct Shader_Resource {
-    const char *vert_fname;
-    const char *frag_fname;
-    size_t uniform_count;
-    GLuint program;
+    const char *vert_fname = nullptr;
+    const char *frag_fname = nullptr;
+    size_t uniform_count = 0;
+    GLuint program = 0;
     GLint uniforms[UNIFORM_MAX_COUNT];
 };
 

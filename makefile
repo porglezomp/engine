@@ -36,6 +36,9 @@ MAIN_DEP=$(MAIN_SRC:src/%.cpp=$(OSRC)/%.d)
 LIB_DEP=$(LIB_SRC:lib/%.cpp=$(OLIB)/%.d)
 GAME_DEP=$(GAME_SRC:game/%.cpp=$(OGAME)/%.d)
 
+OBJS=$(wildcard assets/models/*.obj)
+MODELS=$(OBJS:assets/models/%.obj=assets/models/%.model)
+
 # Make sure all the target directories are created
 DUMMY := $(shell find lib -type d | sed 's|^|target/|' | xargs mkdir -p)
 DUMMY := $(shell find src -type d | sed 's|^|target/|' | xargs mkdir -p)
@@ -47,7 +50,7 @@ LIBGAME=target/libgame.so
 LIBSUP=target/libsupport.so
 
 
-all: $(APP) $(LIBGAME) $(LIBSUP)
+all: $(APP) $(LIBGAME) $(LIBSUP) assets
 
 $(APP): $(MAIN_OBJ) $(LIBSUP)
 	$(CXX) -o $@ $(CFLAGS) $(LDFLAGS) $(MAIN_OBJ) $(LDLIBS) -Ltarget -lsupport
@@ -68,15 +71,19 @@ $(OLIB)/%.o: lib/%.cpp
 $(OGAME)/%.o: game/%.cpp
 	$(CC) -o $@ -c $< $(CFLAGS)
 
-reload:
+reload: assets
 	if pgrep garden-game; then kill -s USR1 `pgrep garden-game`; fi
+
+assets: $(MODELS)
+
+assets/models/%.model: assets/models/%.obj
+	python3 parse_obj.py $< > $@
 
 test: $(APP) $(LIBGAME) $(LIBSUP)
 	./$<
 
 clean:
 	$(RM) -rf $(ODIR)
-
 
 # Use the generated dependency files
 -include $(MAIN_DEP)

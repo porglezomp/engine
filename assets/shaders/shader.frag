@@ -6,6 +6,8 @@ layout (location = 2) in vec2 uv;
 
 layout (location = 0) out vec4 fragColor;
 
+uniform sampler2D lightmap;
+
 void main() {
     vec3 normal = normalize(norm);
     float leftLight = max(0, dot(normal, normalize(vec3(-2, 0, -1))));
@@ -14,5 +16,6 @@ void main() {
     const float scale = 128;
     float u = int(uv.x * scale) % 2;
     float v = int(uv.y * scale) % 2;
-    fragColor = vec4(float(u == v) * color, 1.0);
+    // fragColor = vec4(float(u == v) * color, 1.0);
+    fragColor = vec4(texture(lightmap, uv).xyz * 1, 1);
 }

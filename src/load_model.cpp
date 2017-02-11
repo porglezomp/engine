@@ -1,5 +1,8 @@
 #include "load_model.h"
 
+#include "lib/resources/resource.h"
+#include "lib/resources/model.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <iso646.h>

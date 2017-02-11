@@ -2,9 +2,11 @@
 #define GARDEN_LOAD_SHADER_HEADER_INCLUDED
 
 #include "lib/gl.h"
-#include "lib/resources/resource.h"
-#include "lib/resources/shader.h"
 
+
+struct Resource_Error;
+struct Resource_Set;
+struct Shader_Resource;
 
 enum Shader_Load_Error {
     Shader_Load_Error_None,

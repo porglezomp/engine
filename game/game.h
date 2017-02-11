@@ -12,7 +12,8 @@ struct Resource_Set;
 
 enum Set_Type {
     Set_Type_Shader,
-    Set_Type_Model
+    Set_Type_Model,
+    Set_Type_Texture,
 };
 
 struct Game_Api {

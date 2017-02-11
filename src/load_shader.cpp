@@ -1,4 +1,6 @@
 #include "load_shader.h"
+#include "lib/resources/resource.h"
+#include "lib/resources/shader.h"
 
 #include <stdlib.h>
 #include <iso646.h>

@@ -10,7 +10,8 @@ struct Resource_Error {
 
 enum Resource_Type {
     Resource_Type_Shader,
-    Resource_Type_Model
+    Resource_Type_Model,
+    Resource_Type_Texture,
 };
 
 struct Resource {

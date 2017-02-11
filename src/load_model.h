@@ -2,9 +2,11 @@
 #define GARDEN_LOAD_MODEL_HEADER_INCLUDED
 
 #include "lib/gl.h"
-#include "lib/resources/resource.h"
-#include "lib/resources/model.h"
 
+
+struct Resource_Error;
+struct Resource_Set;
+struct Model_Resource;
 
 enum Model_Load_Error {
     Model_Load_Error_None,
