@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate glium;
 extern crate live_reload;
 
@@ -8,6 +9,12 @@ use glium::glutin::{Event, WindowEvent, VirtualKeyCode, ElementState};
 mod host;
 
 use host::{Host, Axis};
+
+#[derive(Copy, Clone)]
+struct Vert {
+    pos: [f32; 3],
+}
+implement_vertex!(Vert, pos);
 
 pub fn main() {
     let mut events_loop = glium::glutin::EventsLoop::new();
@@ -22,6 +29,38 @@ pub fn main() {
     let mut app = live_reload::Reloadable::new("target/debug/libgame.dylib", host)
         .expect("Should load!");
 
+    let vertex_data = &[
+        Vert { pos: [-1.0, 0.0, 0.0] },
+        Vert { pos: [0.0, 1.0, 0.0] },
+        Vert { pos: [1.0, 0.0, 0.0] },
+    ];
+    let index_data = &[0u16, 1, 2];
+
+    let vertex_buffer = glium::vertex::VertexBuffer::new(&display, vertex_data).unwrap();
+    let indices = glium::index::IndexBuffer::new(
+        &display,
+        glium::index::PrimitiveType::TrianglesList,
+        index_data,
+    ).unwrap();
+    let program = glium::program::Program::from_source(
+        &display,
+        "
+#version 410
+in vec3 pos;
+void main() {
+  gl_Position = vec4(pos, 1);
+}
+",
+        "
+#version 410
+out vec4 color;
+void main() {
+  color = vec4(1.0, 1.0, 1.0, 1.0);
+}
+",
+        None,
+    ).unwrap();
+    let uniforms = uniform!{};
 
     let mut running = true;
     let mut w_pressed = ElementState::Released;
@@ -96,6 +135,16 @@ pub fn main() {
             app.host().clear_color[2],
             app.host().clear_color[3],
         );
+
+        frame
+            .draw(
+                &vertex_buffer,
+                &indices,
+                &program,
+                &uniforms,
+                &Default::default(),
+            )
+            .unwrap();
         frame.finish().expect("Should render?");
     }
 }
