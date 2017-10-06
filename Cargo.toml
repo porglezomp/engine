@@ -1,0 +1,12 @@
+[package]
+name = "garden"
+version = "0.1.0"
+authors = ["Caleb Jones <code@calebjones.net>"]
+
+[lib]
+name = "game"
+crate-type = ["cdylib"]
+
+[dependencies]
+glium = "0.17"
+live-reload = "0.2"
