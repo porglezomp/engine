@@ -8,6 +8,7 @@ pub enum Axis {
 
 pub struct Host {
     axes: [f32; 4],
+    pub pos: [f32; 3],
     pub clear_color: [f32; 4],
 }
 
@@ -15,6 +16,7 @@ impl Host {
     pub fn new() -> Self {
         Host {
             axes: [0.0; 4],
+            pos: [0.0, 0.0, -1.0],
             clear_color: [0.0; 4],
         }
     }

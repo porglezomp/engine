@@ -1,10 +1,12 @@
 #[macro_use]
 extern crate glium;
+extern crate cgmath;
 extern crate live_reload;
 
 use live_reload::ShouldQuit;
 use glium::Surface;
 use glium::glutin::{Event, WindowEvent, VirtualKeyCode, ElementState};
+use cgmath::prelude::*;
 
 mod host;
 
@@ -47,20 +49,22 @@ pub fn main() {
         "
 #version 410
 in vec3 pos;
+uniform mat4 proj;
+uniform mat4 model;
 void main() {
-  gl_Position = vec4(pos, 1);
+  gl_Position = proj * model * vec4(pos, 1);
 }
 ",
         "
 #version 410
-out vec4 color;
+out vec4 out_color;
+uniform vec4 color;
 void main() {
-  color = vec4(1.0, 1.0, 1.0, 1.0);
+  out_color = color;
 }
 ",
         None,
     ).unwrap();
-    let uniforms = uniform!{};
 
     let mut running = true;
     let mut w_pressed = ElementState::Released;
@@ -129,12 +133,20 @@ void main() {
         }
 
         let mut frame = display.draw();
-        frame.clear_color(
-            app.host().clear_color[0],
-            app.host().clear_color[1],
-            app.host().clear_color[2],
-            app.host().clear_color[3],
-        );
+        frame.clear_color(0.0, 0.0, 0.0, 1.0);
+
+        let uniforms =
+            uniform!{
+                proj: cgmath::conv::array4x4(cgmath::perspective(
+                    cgmath::Deg(80.0f32),
+                    1280.0 / 720.0,
+                    0.1,
+                    500.0,
+                )),
+                model: cgmath::conv::array4x4(cgmath::Matrix4::from_translation(cgmath::Vector3 { x: app.host().pos[0], y: app.host().pos[1], z: app.host().pos[2] })
+                ),
+                color: app.host().clear_color,
+            };
 
         frame
             .draw(

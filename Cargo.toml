@@ -9,4 +9,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 glium = "0.17"
+cgmath = "0.15.0"
 live-reload = "0.2"

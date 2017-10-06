@@ -19,9 +19,18 @@ live_reload! {
 fn init(_host: &mut Host, _state: &mut State) {}
 fn reload(_host: &mut Host, _state: &mut State) {}
 fn update(host: &mut Host, _state: &mut State) -> live_reload::ShouldQuit {
-    host.clear_color[0] = (host.get_axis(Axis::MoveLR) + 1.0) / 2.0;
-    host.clear_color[1] = (host.get_axis(Axis::MoveUD) + 1.0) / 2.0;
-    host.clear_color[2] = 0.0;
+    host.clear_color[0] = 0.8;
+    host.clear_color[1] = 0.8;
+    host.clear_color[2] = 0.8;
+    host.clear_color[3] = 1.0;
+    if host.get_axis(Axis::MoveUD) > 0.0 {
+        host.clear_color[0] = 1.0;
+        host.clear_color[2] = 0.6;
+    } else if host.get_axis(Axis::MoveUD) < 0.0 {
+        host.clear_color[0] = 0.6;
+        host.clear_color[2] = 1.0;
+    }
+    host.pos[2] -= host.get_axis(Axis::MoveUD) * 0.05;
     live_reload::ShouldQuit::No
 }
 fn unload(_host: &mut Host, _state: &mut State) {}
