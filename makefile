@@ -9,3 +9,5 @@ all: $(MODELS)
 $(MODEL_DIR)/%.model: $(BLEND_DIR)/%.blend
 	$(BLENDER) --background $< --python export.py -- $@
 
+clean:
+	$(RM) -rf $(MODELS)

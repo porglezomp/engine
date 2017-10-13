@@ -17,8 +17,14 @@ def export_model(bm, out_file):
 def main(fname):
     # Merge all the meshes into one bmesh
     bm = bmesh.new()
-    for mesh in bpy.data.meshes:
-        bm.from_mesh(mesh)
+    for obj in bpy.data.objects:
+        if obj.type != 'MESH':
+            continue
+        bm.from_mesh(obj.to_mesh(
+            bpy.context.scene,
+            apply_modifiers=True,
+            settings='RENDER'
+        ))
 
     # Triangulate
     bmesh.ops.triangulate(bm, faces=bm.faces)
@@ -32,7 +38,6 @@ def main(fname):
 
     # Cleanup
     bm.free()
-    del bm
 
 
 if __name__ == '__main__':
