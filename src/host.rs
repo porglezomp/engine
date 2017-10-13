@@ -1,3 +1,5 @@
+use cgmath::Matrix4;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Axis {
     MoveUD,
@@ -6,18 +8,27 @@ pub enum Axis {
     LookLR,
 }
 
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub struct ModelId(u16);
+
+#[derive(Debug, Clone)]
+pub enum RenderCommand {
+    ClearColor([f32; 4]),
+    ClearDepth(f32),
+    Model(ModelId, Matrix4<f32>),
+}
+
+#[derive(Debug)]
 pub struct Host {
+    pub render_queue: Vec<RenderCommand>,
     axes: [f32; 4],
-    pub pos: [f32; 3],
-    pub clear_color: [f32; 4],
 }
 
 impl Host {
     pub fn new() -> Self {
         Host {
+            render_queue: Vec::with_capacity(1024),
             axes: [0.0; 4],
-            pos: [0.0, 0.0, -1.0],
-            clear_color: [0.0; 4],
         }
     }
 
@@ -37,5 +48,9 @@ impl Host {
             Axis::MoveLR => self.axes[2] = val,
             Axis::MoveUD => self.axes[3] = val,
         }
+    }
+
+    pub fn send_render_command(&mut self, cmd: RenderCommand) {
+        self.render_queue.push(cmd);
     }
 }

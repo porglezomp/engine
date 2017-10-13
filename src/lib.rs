@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate live_reload;
+extern crate cgmath;
 
 mod host;
 use host::{Axis, Host};
@@ -19,18 +20,15 @@ live_reload! {
 fn init(_host: &mut Host, _state: &mut State) {}
 fn reload(_host: &mut Host, _state: &mut State) {}
 fn update(host: &mut Host, _state: &mut State) -> live_reload::ShouldQuit {
-    host.clear_color[0] = 0.8;
-    host.clear_color[1] = 0.8;
-    host.clear_color[2] = 0.8;
-    host.clear_color[3] = 1.0;
+    let (mut r, g, mut b) = (0.8, 0.8, 0.8);
     if host.get_axis(Axis::MoveUD) > 0.0 {
-        host.clear_color[0] = 1.0;
-        host.clear_color[2] = 0.6;
+        r = 1.0;
+        b = 0.6;
     } else if host.get_axis(Axis::MoveUD) < 0.0 {
-        host.clear_color[0] = 0.6;
-        host.clear_color[2] = 1.0;
+        r = 0.6;
+        b = 1.0;
     }
-    host.pos[2] -= host.get_axis(Axis::MoveUD) * 0.05;
+    host.send_render_command(host::RenderCommand::ClearColor([r, g, b, 1.0]));
     live_reload::ShouldQuit::No
 }
 fn unload(_host: &mut Host, _state: &mut State) {}

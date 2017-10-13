@@ -27,6 +27,7 @@ struct Vert {
     pos: [f32; 3],
     norm: [f32; 3],
 }
+implement_vertex!(Vert, pos, norm);
 
 struct ModelData {
     vertex: Vec<Vert>,
@@ -96,14 +97,14 @@ struct Model {
     index: glium::IndexBuffer<u16>,
 }
 
-implement_vertex!(Vert, pos);
-
 pub fn main() {
     let mut events_loop = glium::glutin::EventsLoop::new();
     let window = glium::glutin::WindowBuilder::new()
         .with_dimensions(1280, 720)
         .with_title("Garden");
-    let context = glium::glutin::ContextBuilder::new().with_vsync(true);
+    let context = glium::glutin::ContextBuilder::new()
+        .with_vsync(true)
+        .with_depth_buffer(32);
     let display =
         glium::Display::new(window, context, &events_loop).expect("Should create display!");
 
@@ -127,23 +128,41 @@ pub fn main() {
         &display,
         "
 #version 410
-in vec3 pos;
+
+out vec3 frag_norm;
+
 uniform mat4 proj;
 uniform mat4 model;
+
+in vec3 pos;
+in vec3 norm;
+
 void main() {
   gl_Position = proj * model * vec4(pos, 1);
+  frag_norm = norm;
 }
 ",
         "
 #version 410
+
 out vec4 out_color;
-uniform vec4 color;
+in vec3 frag_norm;
+
+// uniform vec4 color;
 void main() {
-  out_color = color;
+  float x = dot(frag_norm, vec3(1.0, 0.0, 0.0));
+  out_color = vec4(x);
 }
 ",
         None,
     ).unwrap();
+
+    let proj = cgmath::conv::array4x4(cgmath::perspective(
+        cgmath::Deg(80.0f32),
+        1280.0 / 720.0,
+        0.1,
+        500.0,
+    ));
 
     let mut running = true;
     let mut w_pressed = ElementState::Released;
@@ -213,29 +232,37 @@ void main() {
 
         let mut frame = display.draw();
         frame.clear_color(0.0, 0.0, 0.0, 1.0);
+        for cmd in &app.host().render_queue {
+            match *cmd {
+                host::RenderCommand::ClearColor(col) => {
+                    frame.clear_color(col[0], col[1], col[2], col[3])
+                }
+                host::RenderCommand::ClearDepth(d) => frame.clear_depth(d),
+                host::RenderCommand::Model(id, transform) => {
+                    let _ = id;
+                    let uniforms =
+                        uniform!{
+                            proj: proj,
+                            model: cgmath::conv::array4x4(transform),
+                            // color: [0.0, 0.0, 0.0, 0.0],
+                        };
 
-        let uniforms =
-            uniform!{
-                proj: cgmath::conv::array4x4(cgmath::perspective(
-                    cgmath::Deg(80.0f32),
-                    1280.0 / 720.0,
-                    0.1,
-                    500.0,
-                )),
-                model: cgmath::conv::array4x4(cgmath::Matrix4::from_translation(cgmath::Vector3 { x: app.host().pos[0], y: app.host().pos[1], z: app.host().pos[2] })
-                ),
-                color: app.host().clear_color,
-            };
+                    let params = glium::DrawParameters {
+                        depth: glium::Depth {
+                            test: glium::DepthTest::IfLess,
+                            write: true,
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    };
+                    frame
+                        .draw(&model.vertex, &model.index, &program, &uniforms, &params)
+                        .unwrap();
+                }
+            }
+        }
+        app.host_mut().render_queue.clear();
 
-        frame
-            .draw(
-                &model.vertex,
-                &model.index,
-                &program,
-                &uniforms,
-                &Default::default(),
-            )
-            .unwrap();
         frame.finish().expect("Should render?");
     }
 }
