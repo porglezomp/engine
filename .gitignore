@@ -1,3 +1,9 @@
+## macOS ##
 .DS_Store
+
+## Rust ##
 /target/
 **/*.rs.bk
+
+## Garden Files ##
+/assets/models/
