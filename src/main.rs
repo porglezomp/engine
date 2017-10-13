@@ -16,6 +16,17 @@ use host::{Host, Axis};
 struct Vert {
     pos: [f32; 3],
 }
+
+struct ModelData {
+    vertex: Vec<Vert>,
+    index: Vec<u16>,
+}
+
+struct Model {
+    vertex: glium::VertexBuffer<Vert>,
+    index: glium::IndexBuffer<u16>,
+}
+
 implement_vertex!(Vert, pos);
 
 pub fn main() {
@@ -31,19 +42,54 @@ pub fn main() {
     let mut app = live_reload::Reloadable::new("target/debug/libgame.dylib", host)
         .expect("Should load!");
 
-    let vertex_data = &[
-        Vert { pos: [-1.0, 0.0, 0.0] },
-        Vert { pos: [0.0, 1.0, 0.0] },
-        Vert { pos: [1.0, 0.0, 0.0] },
-    ];
-    let index_data = &[0u16, 1, 2];
+    // let model = model
+    let model_data = ModelData {
+        vertex: vec![
+            Vert { pos: [-1.0, -1.0, -1.0] },
+            Vert { pos: [-1.0, 01.0, -1.0] },
+            Vert { pos: [01.0, 01.0, -1.0] },
+            Vert { pos: [01.0, -1.0, -1.0] },
+            Vert { pos: [-1.0, -1.0, 01.0] },
+            Vert { pos: [-1.0, 01.0, 01.0] },
+            Vert { pos: [01.0, 01.0, 01.0] },
+            Vert { pos: [01.0, -1.0, 01.0] },
+        ],
+        index: vec![
+            0,
+            1,
+            3,
+            3,
+            1,
+            2,
+            4,
+            5,
+            7,
+            7,
+            5,
+            6,
+            0,
+            4,
+            7,
+            0,
+            7,
+            3,
+            1,
+            5,
+            6,
+            1,
+            6,
+            2,
+        ],
+    };
 
-    let vertex_buffer = glium::vertex::VertexBuffer::new(&display, vertex_data).unwrap();
-    let indices = glium::index::IndexBuffer::new(
-        &display,
-        glium::index::PrimitiveType::TrianglesList,
-        index_data,
-    ).unwrap();
+    let model = Model {
+        vertex: glium::vertex::VertexBuffer::new(&display, &model_data.vertex).unwrap(),
+        index: glium::index::IndexBuffer::new(
+            &display,
+            glium::index::PrimitiveType::TrianglesList,
+            &model_data.index,
+        ).unwrap(),
+    };
     let program = glium::program::Program::from_source(
         &display,
         "
@@ -150,8 +196,8 @@ void main() {
 
         frame
             .draw(
-                &vertex_buffer,
-                &indices,
+                &model.vertex,
+                &model.index,
                 &program,
                 &uniforms,
                 &Default::default(),
