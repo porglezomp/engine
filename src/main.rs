@@ -5,8 +5,8 @@ extern crate live_reload;
 
 use live_reload::ShouldQuit;
 use glium::Surface;
-use glium::glutin::{Event, WindowEvent, VirtualKeyCode, ElementState};
-use cgmath::prelude::*;
+use glium::glutin::{Event, WindowEvent, VirtualKeyCode, ElementState, DeviceEvent};
+// use cgmath::prelude::*;
 
 mod host;
 
@@ -165,67 +165,13 @@ void main() {
         500.0,
     ));
 
+    let mut input = Input::new();
+
     let mut running = true;
-    let mut w_pressed = ElementState::Released;
-    let mut s_pressed = ElementState::Released;
-    let mut a_pressed = ElementState::Released;
-    let mut d_pressed = ElementState::Released;
     while running {
         app.reload().expect("Should safely reload!");
 
-        events_loop.poll_events(|event| match event {
-            Event::WindowEvent { event: WindowEvent::Closed, .. } => {
-                running = false;
-            }
-            Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
-                match input.virtual_keycode {
-                    Some(VirtualKeyCode::W) => {
-                        w_pressed = input.state;
-                        if w_pressed == ElementState::Pressed {
-                            app.host_mut().set_axis(Axis::MoveUD, 1.0);
-                        } else if s_pressed == ElementState::Pressed {
-                            app.host_mut().set_axis(Axis::MoveUD, -1.0);
-                        } else {
-                            app.host_mut().set_axis(Axis::MoveUD, 0.0);
-                        }
-                    }
-                    Some(VirtualKeyCode::S) => {
-                        s_pressed = input.state;
-                        if s_pressed == ElementState::Pressed {
-                            app.host_mut().set_axis(Axis::MoveUD, -1.0);
-                        } else if w_pressed == ElementState::Pressed {
-                            app.host_mut().set_axis(Axis::MoveUD, 1.0);
-                        } else {
-                            app.host_mut().set_axis(Axis::MoveUD, 0.0);
-                        }
-                    }
-                    Some(VirtualKeyCode::A) => {
-                        a_pressed = input.state;
-                        if a_pressed == ElementState::Pressed {
-                            app.host_mut().set_axis(Axis::MoveLR, -1.0);
-                        } else if d_pressed == ElementState::Pressed {
-                            app.host_mut().set_axis(Axis::MoveLR, 1.0);
-                        } else {
-                            app.host_mut().set_axis(Axis::MoveLR, 0.0);
-                        }
-                    }
-                    Some(VirtualKeyCode::D) => {
-                        d_pressed = input.state;
-                        if d_pressed == ElementState::Pressed {
-                            app.host_mut().set_axis(Axis::MoveLR, 1.0);
-                        } else if a_pressed == ElementState::Pressed {
-                            app.host_mut().set_axis(Axis::MoveLR, -1.0);
-                        } else {
-                            app.host_mut().set_axis(Axis::MoveLR, 0.0);
-                        }
-                    }
-                    Some(other) => println!("{:?} {:?}?", other, input.state),
-                    None => println!("None {:?}???", input.state),
-                }
-            }
-            _ => (),
-            // evt => println!("{:?}", evt),
-        });
+        running = input.handle_input(&mut events_loop, &mut app);
 
         if app.update() == ShouldQuit::Yes {
             running = false;
@@ -263,5 +209,115 @@ void main() {
         }
         app.host_mut().render_queue.clear();
         frame.finish().expect("Should render?");
+    }
+}
+
+struct Input {
+    w_pressed: ElementState,
+    s_pressed: ElementState,
+    a_pressed: ElementState,
+    d_pressed: ElementState,
+    mouse_x: f64,
+    mouse_y: f64,
+}
+
+impl Input {
+    fn new() -> Input {
+        Input {
+            w_pressed: ElementState::Released,
+            s_pressed: ElementState::Released,
+            a_pressed: ElementState::Released,
+            d_pressed: ElementState::Released,
+            mouse_x: 0.0,
+            mouse_y: 0.0,
+        }
+    }
+
+    fn handle_input(
+        &mut self,
+        events_loop: &mut glium::glutin::EventsLoop,
+        app: &mut live_reload::Reloadable<Host>,
+    ) -> bool {
+        let mut running = true;
+        app.host_mut().set_axis(Axis::LookLR, 0.0);
+        app.host_mut().set_axis(Axis::LookUD, 0.0);
+        events_loop.poll_events(|event| match event {
+            Event::WindowEvent { event: WindowEvent::Closed, .. } => {
+                running = false;
+            }
+            Event::WindowEvent { event: WindowEvent::Focused(is_focused), .. } => {
+                if is_focused {
+                    println!("FOCUS");
+                } else {
+                    println!("BLUR");
+                }
+            }
+            Event::DeviceEvent {
+                device_id,
+                event: DeviceEvent::Motion { axis, value },
+                ..
+            } => {
+                match axis {
+                    0 => app.host_mut().set_axis(Axis::LookLR, value as f32),
+                    1 => app.host_mut().set_axis(Axis::LookUD, value as f32),
+                    _ => (),
+                }
+                // println!(
+                //     "Device ID: {:?}, Axis: {}, Value: {}",
+                //     device_id,
+                //     axis,
+                //     value
+                // );
+            }
+            Event::WindowEvent { event: WindowEvent::KeyboardInput { input, .. }, .. } => {
+                match input.virtual_keycode {
+                    Some(VirtualKeyCode::W) => {
+                        self.w_pressed = input.state;
+                        if self.w_pressed == ElementState::Pressed {
+                            app.host_mut().set_axis(Axis::MoveUD, 1.0);
+                        } else if self.s_pressed == ElementState::Pressed {
+                            app.host_mut().set_axis(Axis::MoveUD, -1.0);
+                        } else {
+                            app.host_mut().set_axis(Axis::MoveUD, 0.0);
+                        }
+                    }
+                    Some(VirtualKeyCode::S) => {
+                        self.s_pressed = input.state;
+                        if self.s_pressed == ElementState::Pressed {
+                            app.host_mut().set_axis(Axis::MoveUD, -1.0);
+                        } else if self.w_pressed == ElementState::Pressed {
+                            app.host_mut().set_axis(Axis::MoveUD, 1.0);
+                        } else {
+                            app.host_mut().set_axis(Axis::MoveUD, 0.0);
+                        }
+                    }
+                    Some(VirtualKeyCode::A) => {
+                        self.a_pressed = input.state;
+                        if self.a_pressed == ElementState::Pressed {
+                            app.host_mut().set_axis(Axis::MoveLR, -1.0);
+                        } else if self.d_pressed == ElementState::Pressed {
+                            app.host_mut().set_axis(Axis::MoveLR, 1.0);
+                        } else {
+                            app.host_mut().set_axis(Axis::MoveLR, 0.0);
+                        }
+                    }
+                    Some(VirtualKeyCode::D) => {
+                        self.d_pressed = input.state;
+                        if self.d_pressed == ElementState::Pressed {
+                            app.host_mut().set_axis(Axis::MoveLR, 1.0);
+                        } else if self.a_pressed == ElementState::Pressed {
+                            app.host_mut().set_axis(Axis::MoveLR, -1.0);
+                        } else {
+                            app.host_mut().set_axis(Axis::MoveLR, 0.0);
+                        }
+                    }
+                    Some(other) => println!("{:?} {:?}?", other, input.state),
+                    None => println!("None {:?}???", input.state),
+                }
+            }
+            // evt => println!("{:?}", evt),
+            _ => (),
+        });
+        running
     }
 }
