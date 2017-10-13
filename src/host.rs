@@ -9,7 +9,7 @@ pub enum Axis {
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct ModelId(u16);
+pub struct ModelId(pub u16);
 
 #[derive(Debug, Clone)]
 pub enum RenderCommand {

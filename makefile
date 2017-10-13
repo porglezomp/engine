@@ -5,7 +5,6 @@ MODELS=$(patsubst $(BLEND_DIR)/%.blend,$(MODEL_DIR)/%.model,$(BLENDS))
 BLENDER=blender
 
 all: $(MODELS)
-	echo $(MODELS)
 
 $(MODEL_DIR)/%.model: $(BLEND_DIR)/%.blend
 	$(BLENDER) --background $< --python export.py -- $@

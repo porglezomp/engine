@@ -22,13 +22,14 @@ enum Error {
     MissingIndexCount(usize),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 struct Vert {
     pos: [f32; 3],
     norm: [f32; 3],
 }
 implement_vertex!(Vert, pos, norm);
 
+#[derive(Debug)]
 struct ModelData {
     vertex: Vec<Vert>,
     index: Vec<u16>,
@@ -231,7 +232,6 @@ void main() {
         }
 
         let mut frame = display.draw();
-        frame.clear_color(0.0, 0.0, 0.0, 1.0);
         for cmd in &app.host().render_queue {
             match *cmd {
                 host::RenderCommand::ClearColor(col) => {
@@ -262,7 +262,6 @@ void main() {
             }
         }
         app.host_mut().render_queue.clear();
-
         frame.finish().expect("Should render?");
     }
 }
