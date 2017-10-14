@@ -6,6 +6,8 @@ extern crate live_reload;
 use live_reload::ShouldQuit;
 use glium::Surface;
 use glium::glutin::{Event, WindowEvent, VirtualKeyCode, ElementState, DeviceEvent};
+use std::io::Read;
+use cgmath::{conv, Matrix4, vec3};
 // use cgmath::prelude::*;
 
 mod host;
@@ -125,40 +127,18 @@ pub fn main() {
             &model_data.index,
         ).unwrap(),
     };
-    let program = glium::program::Program::from_source(
-        &display,
-        "
-#version 410
 
-out vec3 frag_norm;
+    let program = {
+        let mut vert_file = std::fs::File::open("assets/shaders/basic.vert").unwrap();
+        let mut vert_src = String::new();
+        vert_file.read_to_string(&mut vert_src).unwrap();
+        let mut frag_file = std::fs::File::open("assets/shaders/basic.frag").unwrap();
+        let mut frag_src = String::new();
+        frag_file.read_to_string(&mut frag_src).unwrap();
+        glium::program::Program::from_source(&display, &vert_src, &frag_src, None).unwrap()
+    };
 
-uniform mat4 proj;
-uniform mat4 model;
-
-in vec3 pos;
-in vec3 norm;
-
-void main() {
-  gl_Position = proj * model * vec4(pos, 1);
-  frag_norm = norm;
-}
-",
-        "
-#version 410
-
-out vec4 out_color;
-in vec3 frag_norm;
-
-// uniform vec4 color;
-void main() {
-  float x = dot(frag_norm, vec3(1.0, 0.0, 0.0));
-  out_color = vec4(x);
-}
-",
-        None,
-    ).unwrap();
-
-    let proj = cgmath::conv::array4x4(cgmath::perspective(
+    let proj = conv::array4x4(cgmath::perspective(
         cgmath::Deg(80.0f32),
         1280.0 / 720.0,
         0.1,
@@ -178,19 +158,21 @@ void main() {
         }
 
         let mut frame = display.draw();
+        let mut view_transform = <cgmath::Matrix4<f32> as cgmath::One>::one();
         for cmd in &app.host().render_queue {
             match *cmd {
                 host::RenderCommand::ClearColor(col) => {
                     frame.clear_color(col[0], col[1], col[2], col[3])
                 }
                 host::RenderCommand::ClearDepth(d) => frame.clear_depth(d),
+                host::RenderCommand::Camera(camera) => view_transform = camera,
                 host::RenderCommand::Model(id, transform) => {
                     let _ = id;
                     let uniforms =
                         uniform!{
-                            proj: proj,
-                            model: cgmath::conv::array4x4(transform),
-                            // color: [0.0, 0.0, 0.0, 0.0],
+                            proj_from_view: proj,
+                            world_from_object: conv::array4x4(transform),
+                            view_from_world: conv::array4x4(view_transform),
                         };
 
                     let params = glium::DrawParameters {
