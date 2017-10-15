@@ -1,5 +1,6 @@
 use cgmath::Matrix4;
 
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Axis {
     MoveUD,
@@ -15,7 +16,6 @@ pub struct ModelId(pub u16);
 pub enum RenderCommand {
     ClearColor([f32; 4]),
     ClearDepth(f32),
-    Camera(Matrix4<f32>),
     Model(ModelId, Matrix4<f32>),
 }
 

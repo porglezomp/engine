@@ -6,7 +6,7 @@ use cgmath::prelude::*;
 use cgmath::{Vector3, Matrix4, vec3, Deg};
 
 mod host;
-use host::{Axis, Host};
+use host::{Axis, Host, RenderCommand, ModelId};
 
 #[repr(C)]
 struct State {
@@ -43,15 +43,16 @@ fn update(host: &mut Host, state: &mut State) -> live_reload::ShouldQuit {
     let movement = vec3(sideways, 0.0, -forwards) * SPEED;
     state.horiz -= host.get_axis(Axis::LookLR);
     state.vert -= host.get_axis(Axis::LookUD);
+
     let rot = Matrix4::from_axis_angle(vec3(0.0, 0.0, 1.0), Deg(state.horiz)) *
         Matrix4::from_axis_angle(vec3(1.0, 0.0, 0.0), Deg(state.vert));
     state.pos += rot.transform_vector(movement);
 
     let mat = rot.transpose() * Matrix4::from_translation(-state.pos);
 
-    host.send_render_command(host::RenderCommand::ClearColor([1.0, 0.1, 0.0, 1.0]));
-    host.send_render_command(host::RenderCommand::ClearDepth(1.0));
-    host.send_render_command(host::RenderCommand::Model(host::ModelId(0), mat));
+    host.send_render_command(RenderCommand::ClearColor([1.0, 0.1, 0.0, 1.0]));
+    host.send_render_command(RenderCommand::ClearDepth(1.0));
+    host.send_render_command(RenderCommand::Model(ModelId(0), mat));
     live_reload::ShouldQuit::No
 }
 

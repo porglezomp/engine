@@ -7,3 +7,6 @@
 
 ## Garden Files ##
 /assets/models/
+
+## Blender ##
+*.blend[1-9]
