@@ -11,7 +11,7 @@ implement_vertex!(Vert, pos, norm);
 #[derive(Debug)]
 pub struct ModelData {
     pub vertex: Vec<Vert>,
-    pub index: Vec<u16>,
+    pub index: Vec<u32>,
 }
 
 impl ModelData {
@@ -74,7 +74,7 @@ impl ModelData {
 
 pub struct Model {
     pub vertex: glium::VertexBuffer<Vert>,
-    pub index: glium::IndexBuffer<u16>,
+    pub index: glium::IndexBuffer<u32>,
 }
 
 #[derive(Debug)]

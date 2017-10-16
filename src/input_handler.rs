@@ -2,6 +2,8 @@ use live_reload;
 use glium;
 use glium::glutin::{Event, WindowEvent, VirtualKeyCode, ElementState, DeviceEvent};
 use host::{Host, Axis};
+use cgmath;
+
 
 pub struct Input {
     w_pressed: ElementState,
@@ -10,6 +12,9 @@ pub struct Input {
     d_pressed: ElementState,
     mouse_x: f64,
     mouse_y: f64,
+    // @Cleanup: Does this belong in here?
+    window_width: u32,
+    window_height: u32,
 }
 
 impl Input {
@@ -21,6 +26,8 @@ impl Input {
             d_pressed: ElementState::Released,
             mouse_x: 0.0,
             mouse_y: 0.0,
+            window_width: 1280,
+            window_height: 720,
         }
     }
 
@@ -100,9 +107,22 @@ impl Input {
                     None => println!("None {:?}???", input.state),
                 }
             }
-            // evt => println!("{:?}", evt),
+            Event::WindowEvent { event: WindowEvent::Resized(width, height), .. } => {
+                self.window_width = width;
+                self.window_height = height;
+            }
+            evt => println!("{:?}", evt),
             _ => (),
         });
         running
+    }
+
+    pub fn projection(&self) -> cgmath::Matrix4<f32> {
+        cgmath::perspective(
+            cgmath::Deg(80.0f32),
+            self.window_width as f32 / self.window_height as f32,
+            0.1,
+            500.0,
+        )
     }
 }
