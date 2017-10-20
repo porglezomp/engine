@@ -5,6 +5,7 @@ dependencies = [
  "cgmath 0.15.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glium 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "live-reload 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "notify 4.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

@@ -11,3 +11,4 @@ crate-type = ["cdylib"]
 glium = "0.17"
 cgmath = "0.15.0"
 live-reload = "0.2"
+notify = "4.0"

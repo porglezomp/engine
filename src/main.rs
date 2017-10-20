@@ -2,6 +2,7 @@
 extern crate glium;
 extern crate cgmath;
 extern crate live_reload;
+extern crate notify;
 
 use live_reload::ShouldQuit;
 use glium::Surface;
@@ -29,28 +30,21 @@ pub fn main() {
     let mut app = live_reload::Reloadable::new("target/debug/libgame.dylib", host)
         .expect("Should load!");
 
-    let file = std::fs::File::open("assets/models/cubes.model").unwrap();
-    let mut buf_read = std::io::BufReader::new(file);
-    let model_data = asset::model::ModelData::load(&mut buf_read).expect("Should load");
-
-    let model = asset::model::Model {
-        vertex: glium::vertex::VertexBuffer::new(&display, &model_data.vertex).unwrap(),
-        index: glium::index::IndexBuffer::new(
-            &display,
-            glium::index::PrimitiveType::TrianglesList,
-            &model_data.index,
-        ).unwrap(),
-    };
-
-    let program = asset::shader::load_shader(&display, "assets/shaders/basic").unwrap();
+    let mut manager = asset::AssetManager::new();
+    let model = manager.load_model(&display, "assets/models/cubes").unwrap();
+    let program = manager
+        .load_shader(&display, "assets/shaders/basic")
+        .unwrap();
 
     let mut input = input_handler::Input::new();
     let mut projection = conv::array4x4(input.projection());
     let mut view_transform = conv::array4x4(Matrix4::from_scale(1.0f32));
 
+
     let mut running = true;
     while running {
         app.reload().expect("Should safely reload!");
+        manager.check_changes();
 
         running = input.handle_input(&mut events_loop, &mut app);
         projection = conv::array4x4(input.projection());
@@ -82,7 +76,13 @@ pub fn main() {
                         ..Default::default()
                     };
                     frame
-                        .draw(&model.vertex, &model.index, &program, &uniforms, &params)
+                        .draw(
+                            manager.vertex_buf(id.into()),
+                            manager.index_buf(id.into()),
+                            manager.shader(program),
+                            &uniforms,
+                            &params,
+                        )
                         .unwrap();
                 }
             }

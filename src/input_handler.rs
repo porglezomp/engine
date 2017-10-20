@@ -103,15 +103,16 @@ impl Input {
                             app.host_mut().set_axis(Axis::MoveLR, 0.0);
                         }
                     }
-                    Some(other) => println!("{:?} {:?}?", other, input.state),
-                    None => println!("None {:?}???", input.state),
+                    _ => (),
+                    // Some(other) => println!("{:?} {:?}?", other, input.state),
+                    // None => println!("None {:?}???", input.state),
                 }
             }
             Event::WindowEvent { event: WindowEvent::Resized(width, height), .. } => {
                 self.window_width = width;
                 self.window_height = height;
             }
-            evt => println!("{:?}", evt),
+            // evt => println!("{:?}", evt),
             _ => (),
         });
         running
