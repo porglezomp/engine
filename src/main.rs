@@ -30,16 +30,17 @@ pub fn main() {
     let mut app = live_reload::Reloadable::new("target/debug/libgame.dylib", host)
         .expect("Should load!");
 
-    let mut manager = asset::AssetManager::new();
-    let model = manager.load_model(&display, "assets/models/cubes").unwrap();
-    let program = manager
-        .load_shader(&display, "assets/shaders/basic")
-        .unwrap();
+    let mut manager = asset::AssetManager::new(&display);
+    let model = manager.load_model("assets/models/cubes").expect(
+        "Load cubes model",
+    );
+    let program = manager.load_shader("assets/shaders/basic").expect(
+        "Load basic shader",
+    );
 
     let mut input = input_handler::Input::new();
     let mut projection = conv::array4x4(input.projection());
     let mut view_transform = conv::array4x4(Matrix4::from_scale(1.0f32));
-
 
     let mut running = true;
     while running {
